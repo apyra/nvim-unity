@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+
+# Detecta sistema operacional
+OS="$(uname -s)"
+
+if [[ "$OS" == *"MINGW"* || "$OS" == *"CYGWIN"* || "$OS" == *"MSYS"* ]]; then
+    # Windows (Git Bash, WSL, etc.)
+    ./nvim-launch.bat "$@"
+else
+    # Linux/macOS
+    ./nvim-launch.sh "$@"
+fi
+
