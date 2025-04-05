@@ -137,7 +137,7 @@ Then run `:TSInstall` in Neovim.
 
 ### 🔁 File Sync with [nvim-unity-handle](https://github.com/apyra/nvim-unity-handle)
 
-This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` files:
+This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` files in nvim:
 
 ```lua
 {
