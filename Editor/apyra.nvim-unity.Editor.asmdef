@@ -1,5 +1,5 @@
 {
-  "name": "NvimUnityEditor",
+  "name": "nvim-unity",
   "references": [],
   "includePlatforms": ["Editor"],
   "excludePlatforms": [],
