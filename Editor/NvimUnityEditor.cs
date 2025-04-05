@@ -1,3 +1,5 @@
+using System;
+using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using UnityEditor;
@@ -62,7 +64,7 @@ public static class NvimUnityEditor
         if (!hasCsproj || !hasSln)
         {
             UnityEngine.Debug.Log("Generating missing project files...");
-            UnityEditor.SyncVS.SyncSolution();
+            SyncHelper.RegenerateProjectFiles();
         }
 
         string vscodePath = Path.Combine(rootPath, ".vscode");

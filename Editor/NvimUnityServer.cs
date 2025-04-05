@@ -64,7 +64,7 @@ public static class NvimUnityServer
     private static void RegenerateProjectFiles()
     {
         // Igual ao botão da UI
-        typeof(UnityEditor.UnityEditor.SyncVS)
+        typeof(UnityEditor.SyncVS)
             .GetMethod("SyncSolution", System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic)
             ?.Invoke(null, null);
     }
