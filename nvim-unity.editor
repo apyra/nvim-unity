@@ -1,0 +1,7 @@
+{
+  "name": "Neovim (Unity)",
+  "defaultIcon": "bin/icon.png",
+  "executable": "bin/nvim-launch"
+}
+
+

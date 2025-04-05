@@ -1,37 +1,78 @@
-using UnityEditor;
-using UnityEngine;
+using System.Diagnostics;
 using System.IO;
+using UnityEditor;
+using UnityEditor.Callbacks;
+using UnityEngine;
 
-public class NvimUnityEditor : EditorWindow
+public static class NvimUnityEditor
 {
-    [MenuItem("NvimUnity/Regenerate Project Files")]
+    private static string GetNvimLauncherPath()
+    {
+        string basePath = "Packages/nvim-unity/bin/";
+#if UNITY_EDITOR_WIN
+        return Path.Combine(basePath, "nvim-open.bat");
+#else
+        return Path.Combine(basePath, "nvim-open.sh");
+#endif
+    }
+
+    [OnOpenAsset(0)]
+    public static bool OnOpenAsset(int instanceID, int line)
+    {
+        string assetPath = AssetDatabase.GetAssetPath(instanceID);
+        if (assetPath.EndsWith(".cs"))
+        {
+            string fullPath = Path.GetFullPath(assetPath);
+            EnsureProjectFiles();
+
+            string nvimPath = GetNvimLauncherPath();
+            if (File.Exists(nvimPath))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = nvimPath,
+                    Arguments = $"\"{fullPath}\"",
+                    UseShellExecute = true
+                });
+                return true;
+            }
+            else
+            {
+                Debug.LogError("nvim launcher script not found: " + nvimPath);
+            }
+        }
+        return false;
+    }
+
+    [MenuItem("Assets/NvimUnity/Regenerate Project Files")]
     public static void RegenerateProjectFiles()
     {
-        Debug.Log("Regenerating .csproj and .sln files...");
-        UnityEditor.SyncVS.SyncSolution(); // Generate .sln
-        GenerateVSCodeFolder(); // Create .vscode folder
         AssetDatabase.Refresh();
-        Debug.Log("Done.");
+        UnityEditor.SyncVS.SyncSolution();
+        Debug.Log("Project files regenerated.");
     }
 
-    private static void GenerateVSCodeFolder()
+    private static void EnsureProjectFiles()
     {
-        string vscodePath = Path.Combine(Directory.GetCurrentDirectory(), ".vscode");
+        string rootPath = Directory.GetCurrentDirectory();
+        string projectName = new DirectoryInfo(rootPath).Name;
+        string slnPath = Path.Combine(rootPath, $"{projectName}.sln");
 
+        bool hasCsproj = Directory.GetFiles(rootPath, "*.csproj", SearchOption.TopDirectoryOnly).Length > 0;
+        bool hasSln = File.Exists(slnPath);
+
+        if (!hasCsproj || !hasSln)
+        {
+            Debug.Log("Generating missing project files...");
+            UnityEditor.SyncVS.SyncSolution();
+        }
+
+        string vscodePath = Path.Combine(rootPath, ".vscode");
         if (!Directory.Exists(vscodePath))
+        {
             Directory.CreateDirectory(vscodePath);
-
-        string settingsJson = @"{
-  ""omnisharp.useModernNet"": true,
-  ""omnisharp.enableRoslynAnalyzers"": true,
-  ""csharp.format.enable"": true
-}";
-        File.WriteAllText(Path.Combine(vscodePath, "settings.json"), settingsJson);
-
-        string launchJson = @"{
-  ""version"": ""0.2.0"",
-  ""configurations"": []
-}";
-        File.WriteAllText(Path.Combine(vscodePath, "launch.json"), launchJson);
+            Debug.Log(".vscode folder created.");
+        }
     }
 }
+

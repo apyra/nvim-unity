@@ -1,10 +1,12 @@
 {
-  "name": "com.apyra.nvmunityeditor",
+  "name": "com.apyra.nvimunity",
   "version": "0.1.0",
-  "displayName": "Nvim Unity Editor",
+  "displayName": "NvimUnity",
   "description": "Integration between Unity and Neovim as an external editor.",
   "unity": "2021.3",
+  "keywords": ["neovim", "unity", "editor"],
   "author": {
-    "name": "apyra"
+    "name": "apyra",
+    "url": "https://github.com/apyra"
   }
 }
