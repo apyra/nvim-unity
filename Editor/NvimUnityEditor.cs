@@ -8,12 +8,10 @@ public static class NvimUnityEditor
 {
     private static string GetNvimLauncherPath()
     {
-        string basePath = "Packages/nvim-unity/bin/";
-#if UNITY_EDITOR_WIN
-        return Path.Combine(basePath, "nvim-open.bat");
-#else
-        return Path.Combine(basePath, "nvim-open.sh");
-#endif
+        // Arquivo dispatcher sem extensão
+        string launcher = "nvim-launch"; 
+        string basePath = "Packages/com.apyra.nvim-unity/Launch/";
+        return Path.GetFullPath(Path.Combine(basePath, launcher));
     }
 
     [OnOpenAsset(0)]
