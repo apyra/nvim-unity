@@ -1,7 +1,7 @@
 {
-  "name": "nvim-unity",
-  "references": [],
-  "includePlatforms": ["Editor"],
-  "excludePlatforms": [],
-  "autoReferenced": true
+  "name": "apyra.nvim-unity.Editor",
+  "references": [
+    "apyra.nvim-unity"
+  ],
+  "includePlatforms": ["Editor"]
 }
