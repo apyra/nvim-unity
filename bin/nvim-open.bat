@@ -1,4 +1,11 @@
 @echo off
-REM Abrir Neovim com o arquivo passado como argumento
 set FILE=%1
-start wt nvim "%FILE%"
+
+:: Check if nvr is available
+where nvr >nul 2>nul
+if %errorlevel%==0 (
+    nvr --remote-tab "%FILE%"
+) else (
+    nvim --listen \\.\pipe\nvim-pipe "%FILE%"
+)
+

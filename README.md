@@ -44,6 +44,50 @@ Once set up, when you double-click any `.cs` file in Unity, it will:
 
 ---
 
+## 🔗 Requirements
+
+To allow Unity to open `.cs` files directly into a running Neovim instance, make sure you have [`neovim-remote`](https://github.com/mhinz/neovim-remote) installed:
+
+### 🪟 Windows
+
+```powershell
+# If you don't have Python:
+choco install python -y
+
+# Then install nvr:
+pip install neovim-remote
+```
+
+Make sure `nvr` is available in your PATH. It is usually installed at:
+
+```
+C:\Users\YOUR_NAME\AppData\Roaming\Python\Python<version>\Scripts
+```
+
+### 🐧 Linux / 🍎 macOS
+
+```bash
+pip install neovim-remote
+```
+
+Or via your package manager:
+
+```bash
+# Debian/Ubuntu
+sudo apt install python3-pip
+pip3 install neovim-remote
+```
+
+```bash
+# macOS (Homebrew)
+brew install python
+pip3 install neovim-remote
+```
+
+Once installed, Unity will send `.cs` files to your running Neovim instance via `nvr`.
+
+---
+
 ## 🧠 Recommended Configuration
 
 This works best with:
