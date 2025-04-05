@@ -36,7 +36,7 @@ public static class NvimUnityEditor
             }
             else
             {
-                Debug.LogError("nvim launcher script not found: " + nvimPath);
+                UnityEngine.Debug.LogError("nvim launcher script not found: " + nvimPath);
             }
         }
         return false;
@@ -46,8 +46,8 @@ public static class NvimUnityEditor
     public static void RegenerateProjectFiles()
     {
         AssetDatabase.Refresh();
-        UnityEditor.SyncVS.SyncSolution();
-        Debug.Log("Project files regenerated.");
+        SyncHelper.RegenerateProjectFiles();
+        UnityEngine.Debug.Log("Project files regenerated.");
     }
 
     private static void EnsureProjectFiles()
@@ -61,7 +61,7 @@ public static class NvimUnityEditor
 
         if (!hasCsproj || !hasSln)
         {
-            Debug.Log("Generating missing project files...");
+            UnityEngine.Debug.Log("Generating missing project files...");
             UnityEditor.SyncVS.SyncSolution();
         }
 
@@ -69,7 +69,35 @@ public static class NvimUnityEditor
         if (!Directory.Exists(vscodePath))
         {
             Directory.CreateDirectory(vscodePath);
-            Debug.Log(".vscode folder created.");
+            UnityEngine.Debug.Log(".vscode folder created.");
+        }
+    }
+}
+
+public static class SyncHelper
+{
+    public static void RegenerateProjectFiles()
+    {
+        var editorAssembly = typeof(UnityEditor.Editor).Assembly;
+        var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
+
+        if (syncVS != null)
+        {
+            var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (syncMethod != null)
+            {
+                syncMethod.Invoke(null, null);
+                UnityEditor.AssetDatabase.Refresh();
+                UnityEngine.Debug.Log("Project files regenerated via reflection.");
+            }
+            else
+            {
+                UnityEngine.Debug.LogError("Failed to find SyncSolution method.");
+            }
+        }
+        else
+        {
+            UnityEngine.Debug.LogError("Failed to find UnityEditor.SyncVS class.");
         }
     }
 }
