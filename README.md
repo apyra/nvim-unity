@@ -113,7 +113,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
 {
   "github/copilot.vim",
   lazy = false,
-  enabled = false,
   config = function()
     vim.g.copilot_no_tab_map = true
     vim.g.copilot_assume_mapped = true
