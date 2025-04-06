@@ -76,6 +76,45 @@ public class NeovimCodeEditor : IExternalCodeEditor
             }
         };
 
+    public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
+  {
+    var lowerCasePath = editorPath.ToLower();
+    var filename = Path.GetFileName(lowerCasePath).Replace(" ", "");
+    var installations = Installations;
+
+    if (!_supportedFileNames.Contains(filename))
+    {
+      installation = default;
+      return false;
+    }
+
+    if (!installations.Any())
+    {
+      installation = new CodeEditor.Installation
+      {
+        Name = editorName,
+        Path = GetLauncherPath()
+      };
+    }
+    else
+    {
+      try
+      {
+        installation = installations.First(inst => inst.Path == editorPath);
+      }
+      catch (InvalidOperationException)
+      {
+        installation = new CodeEditor.Installation
+        {
+          Name = editorName,
+          Path = editorPath
+        };
+      }
+    }
+
+    return true;
+  }
+
     private static string GetLauncherPath()
     {
 #if UNITY_EDITOR_WIN
