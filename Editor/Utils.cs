@@ -2,6 +2,9 @@ using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using System;
+using System.Reflection;
+using Debug = UnityEngine.Debug;
 
 public static class SyncHelper
 {
