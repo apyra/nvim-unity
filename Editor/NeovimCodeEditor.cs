@@ -57,18 +57,22 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         try
         {
-            EnsureProjectFiles();
+            //EnsureProjectFiles();
 
-	    Debug.Log($"[NvimUnity] Running command: cmd.exe /c \"\"{launchScript}\" \"{fullPath}\" +{line}\"");
+	          Debug.Log($"[NvimUnity] Running command: cmd.exe /c \"\"{launchScript}\" \"{fullPath}\" +{line}\"");
 
+            var process = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "cmd.exe",
+                    Arguments = $"/c \"\"{launchScript}\" \"{fullPath}\" +{line}\"",
+                    CreateNoWindow = true,
+                    UseShellExecute = true
+                }
+            }
 
-            Process.Start(new ProcessStartInfo
-{
-    FileName = "cmd.exe",
-    Arguments = $"/c \"\"{launchScript}\" \"{fullPath}\" +{line}\"",
-    CreateNoWindow = true,
-    UseShellExecute = false
-});
+            process.Start();
 
             return true;
         }
@@ -79,7 +83,16 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
     }
 
-    public void OnGUI() { }
+    public void OnGUI() 
+    { 
+        var rect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(new GUILayoutOption[] { }));
+        rect.width = 252;
+        if (GUI.Button(rect, "Regenerate project files"))
+        {
+            SyncHelper.RegenerateProjectFiles();
+        }
+
+    }
 
     public void Initialize(string editorInstallationPath) { }
 

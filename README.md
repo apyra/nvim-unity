@@ -26,7 +26,7 @@ Or clone/download and place into:
 Packages/nvim-unity
 ```
 
-2. Unity will auto-detect the editor as **"Neovim (Unity)"** in `External Tools` thanks to the `.editor` file:
+2. Unity will auto-detect the editor as **"Neovim (Unity)"** in `External Tools`:
 
 - Go to `Edit > Preferences > External Tools`
 - Select **Neovim (Unity)** (no need to browse for `.exe`)
@@ -48,7 +48,7 @@ Once set up, when you double-click any `.cs` file in Unity, it will:
 
 To allow Unity to open `.cs` files directly into a running Neovim instance, make sure you have [`neovim-remote`](https://github.com/mhinz/neovim-remote) installed:
 
-### 🪟 Windows
+### 💻 Windows
 
 ```powershell
 # If you don't have Python:
@@ -264,7 +264,7 @@ Neovim is a blazing-fast editor. With NvChad + LSP + this Unity integration, it 
 
 ---
 
-## 🧑‍💻 Contributing
+## 🧑 Contributing
 
 PRs, issues, ideas welcome! This project is evolving – help shape it 🚀
 
