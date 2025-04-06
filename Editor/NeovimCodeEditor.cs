@@ -61,7 +61,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
 	          Debug.Log($"[NvimUnity] Running command: cmd.exe /c \"\"{launchScript}\" \"{fullPath}\" +{line}\"");
 
-            RunCmdCommand($"\"\"{launchScript}\" \"{filePath}\" +{line}\"")
+            RunCmdCommand($"\"\"{launchScript}\" \"{filePath}\" +{line}\"");
 
             return true;
         }
