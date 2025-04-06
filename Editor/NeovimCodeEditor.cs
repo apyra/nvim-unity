@@ -76,6 +76,23 @@ public class NeovimCodeEditor : IExternalCodeEditor
             }
         };
 
+     // Unity calls this function during initialization in order to sync the Project. This is different from SyncIfNeeded in that it does not get a list of changes.
+  public void SyncAll()
+  {
+    AssetDatabase.Refresh();
+    EnsureProjectFiles();
+  }
+
+  // When you change Assets in Unity, this method for the current chosen instance of IExternalCodeEditor parses the new and changed Assets.
+  public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
+  {
+    /*(_projectGeneration.AssemblyNameProvider as IPackageInfoCache)?.ResetPackageInfoCache();*/
+    /*_projectGeneration.SyncIfNeeded(addedFiles.Union(deletedFiles).Union(movedFiles).Union(movedFromFiles).ToList(), importedFiles);*/
+    /**/
+    /**/
+  }
+
+
     public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
   {
     var lowerCasePath = editorPath.ToLower();
