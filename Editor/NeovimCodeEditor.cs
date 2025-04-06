@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEditor;
-using UnityEditorInternal;
 using UnityEngine;
 using Unity.CodeEditor;
 using Debug = UnityEngine.Debug;
@@ -16,7 +15,6 @@ public class NeovimCodeEditor : IExternalCodeEditor
     static NeovimCodeEditor()
     {
         CodeEditor.Register(new NeovimCodeEditor());
-        //EnsureProjectFiles();
     }
 
     public string GetDisplayName() => editorName;
@@ -34,6 +32,12 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
     public bool OpenFileAtLine(string filePath, int line)
     {
+        if (!IsNvimUnityDefaultEditor())
+        {
+            Debug.LogWarning("[NvimUnity] Skipped OpenFileAtLine: Neovim is not set as the default external script editor.");
+            return false;
+        }
+
         if (string.IsNullOrEmpty(filePath))
         {
             Debug.LogError("[NvimUnity] filePath is null or empty!");
@@ -46,8 +50,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         string launchScript = NormalizePath(GetLauncherPath());
 
         Debug.Log($"[NvimUnity] Opening file: {fullPath} at line {line}");
-        Debug.Log($"[NvimUnity] Launching script: {launchScript}");
-        Debug.Log($"[NvimUnity] File exists? {File.Exists(launchScript)}");
+        Debug.Log($"[NvimUnity] Using launch script: {launchScript}");
 
         if (!File.Exists(launchScript))
         {
@@ -57,12 +60,8 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         try
         {
-            //EnsureProjectFiles();
-
-	          Debug.Log($"[NvimUnity] Running command: cmd.exe /c \"\"{launchScript}\" \"{fullPath}\" +{line}\"");
-
-            RunCmdCommand($"/c \"\"{launchScript}\" \"{filePath}\" +{line}\"");
-
+            string command = $"\"{launchScript}\" \"{fullPath}\" +{line}";
+            RunShellCommand(command);
             return true;
         }
         catch (Exception e)
@@ -72,39 +71,48 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
     }
 
-    void RunCmdCommand(string command)
+    private void RunShellCommand(string command)
     {
-        ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe",command);
-        processInfo.CreateNoWindow = true;
-        processInfo.UseShellExecute = false;
-        processInfo.RedirectStandardOutput = true;
-        processInfo.RedirectStandardError = true;
+        var psi = new ProcessStartInfo();
 
-        Process process = new Process();
-        process.StartInfo = processInfo;
-        process.Start();
+#if UNITY_EDITOR_WIN
+        psi.FileName = "cmd.exe";
+        psi.Arguments = $"/k {command}";
+#else
+        psi.FileName = "/bin/bash";
+        psi.Arguments = $"-c \"{command}\"";
+#endif
 
-        string output = process.StandardOutput.ReadToEnd();
-        string error = process.StandardError.ReadToEnd();
+        psi.UseShellExecute = false;
+        psi.CreateNoWindow = false;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
 
-        process.WaitForExit();
-
-        Debug.Log("Output: " + output);
-        if (!string.IsNullOrEmpty(error))
+        using (var process = new Process { StartInfo = psi })
         {
-            Debug.LogError("Error: " + error);
+            process.Start();
+
+            string output = process.StandardOutput.ReadToEnd();
+            string error = process.StandardError.ReadToEnd();
+
+            process.WaitForExit();
+
+            if (!string.IsNullOrEmpty(output))
+                Debug.Log("[NvimUnity] Output: " + output);
+
+            if (!string.IsNullOrEmpty(error))
+                Debug.LogError("[NvimUnity] Error: " + error);
         }
     }
 
-    public void OnGUI() 
-    { 
-        var rect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect(new GUILayoutOption[] { }));
+    public void OnGUI()
+    {
+        var rect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
         rect.width = 252;
         if (GUI.Button(rect, "Regenerate project files"))
         {
             SyncHelper.RegenerateProjectFiles();
         }
-
     }
 
     public void Initialize(string editorInstallationPath) { }
@@ -126,7 +134,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
     public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
     {
-        // Not implemented
+        // Optional: implement sync strategy here
     }
 
     public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
@@ -203,5 +211,13 @@ public class NeovimCodeEditor : IExternalCodeEditor
             Debug.Log("[NvimUnity] .vscode folder created.");
         }
     }
+
+    private static bool IsNvimUnityDefaultEditor()
+    {
+        var current = EditorPrefs.GetString("kScriptsDefaultApp");
+        string expected = NormalizePath(GetLauncherPath());
+        return string.Equals(current, expected, StringComparison.OrdinalIgnoreCase);
+    }
+
 }
 
