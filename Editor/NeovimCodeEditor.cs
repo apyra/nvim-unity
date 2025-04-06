@@ -34,7 +34,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
     {
         string fullPath = Path.GetFullPath(filePath);
         string launchScript = GetLauncherPath();
-        Debug.Log(launchScript)
+        Debug.Log(launchScript);
 
         if (!File.Exists(launchScript))
         {
