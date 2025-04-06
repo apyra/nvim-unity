@@ -91,7 +91,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
     CreateNoWindow = false,
     RedirectStandardOutput = true,
     RedirectStandardError = true,
-    WorkingDirectory = Path.GetDirectoryName(launcher)
+    WorkingDirectory = Path.GetDirectoryName(launcherPath)
 };
 
 
