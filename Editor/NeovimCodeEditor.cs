@@ -91,8 +91,14 @@ public class NeovimCodeEditor : IExternalCodeEditor
     CreateNoWindow = false,
     RedirectStandardOutput = true,
     RedirectStandardError = true,
-    WorkingDirectory = Path.GetDirectoryName(launcherPath)
+//    WorkingDirectory = Path.GetDirectoryName(launcherPath)
 };
+
+Debug.Log($"[NvimUnity] ProcessStartInfo:");
+Debug.Log($"  FileName: {psi.FileName}");
+Debug.Log($"  Arguments: {psi.Arguments}");
+Debug.Log($"  UseShellExecute: {psi.UseShellExecute}");
+
 
 
             Process.Start(psi);
