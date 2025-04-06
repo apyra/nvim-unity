@@ -12,8 +12,7 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
-    private static readonly string launcherPath = NormalizePath(GetPackagesFolderPath() 
-            + "/com.apyra.nvim-unity/Launch/nvim-open");
+    private static readonly string launcherPath = NormalizePath("/Packages/com.apyra.nvim-unity/Launch/nvim-open");
 
     static NeovimCodeEditor()
     {
