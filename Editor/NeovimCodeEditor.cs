@@ -112,7 +112,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
       installation = new CodeEditor.Installation
       {
         Name = editorName,
-        Path = GetLauncherPath()
+        Path =  NormalizePath(GetLauncherPath())
       };
     }
     else
@@ -179,6 +179,16 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
         return Path.Combine(parent.FullName, "Packages");
     }
+
+    private static string NormalizePath(string path)
+    {
+#if UNITY_EDITOR_WIN
+        return path.Replace("/", "\\");
+#else
+        return path.Replace("\\", "/");
+#endif
+    }
+
 
 }
 
