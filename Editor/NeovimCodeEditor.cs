@@ -70,7 +70,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
                     CreateNoWindow = true,
                     UseShellExecute = true
                 }
-            }
+            };
 
             process.Start();
 
