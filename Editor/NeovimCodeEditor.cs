@@ -34,6 +34,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
     {
         string fullPath = Path.GetFullPath(filePath);
         string launchScript = GetLauncherPath();
+        Debug.Log(launchScript)
 
         if (!File.Exists(launchScript))
         {
@@ -167,18 +168,16 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
     }
 
-    string GetPackagesFolderPath()
+    private static string GetPackagesFolderPath()
     {
-        // Get the path to the Assets folder
         string assetsPath = Application.dataPath;
-
-        // Navigate to the parent directory of the Assets folder
-        string projectPath = Directory.GetParent(assetsPath).FullName;
-
-        // Combine the project path with the Packages folder name
-        string packagesPath = Path.Combine(projectPath, "Packages");
-
-        return packagesPath;
+        var parent = Directory.GetParent(assetsPath);
+        if (parent == null)
+        {
+            Debug.LogError("[nvim-unity] Could not resolve Packages folder.");
+            return null;
+        }
+        return Path.Combine(parent.FullName, "Packages");
     }
 
 }
