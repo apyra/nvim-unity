@@ -16,6 +16,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
     static NeovimCodeEditor()
     {
         CodeEditor.Register(new NeovimCodeEditor());
+        EnsureLauncherExecutable();
     }
 
     public string GetDisplayName() => editorName;
@@ -86,6 +87,32 @@ public class NeovimCodeEditor : IExternalCodeEditor
             return false;
         }
     }
+
+    private static void EnsureLauncherExecutable()
+    {
+#if !UNITY_EDITOR_WIN
+    try
+    {
+        string path = GetLauncherPath();
+        if (File.Exists(path))
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "/bin/chmod",
+                Arguments = $"+x \"{path}\"",
+                UseShellExecute = false,
+                CreateNoWindow = true
+            });
+            Debug.Log($"[NvimUnity] Ensured script executable: {path}");
+        }
+    }
+    catch (Exception e)
+    {
+        Debug.LogWarning("[NvimUnity] Failed to set script as executable: " + e.Message);
+    }
+#endif
+    }
+
 
     private static bool IsNvimUnityDefaultEditor()
     {

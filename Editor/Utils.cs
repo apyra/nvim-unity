@@ -7,18 +7,29 @@ public static class SyncHelper
 {
     public static void RegenerateProjectFiles()
     {
-        Debug.Log("[NvimUnity] Regenerating solution and C# project files...");
+        var editorAssembly = typeof(UnityEditor.Editor).Assembly;
+        var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
 
-        // Chama API interna do Unity para regenerar arquivos
-        UnityEditor.SyncVS.SyncSolution();
+        if (syncVS != null)
+        {
+            var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (syncMethod != null)
+            {
+                syncMethod.Invoke(null, null);
+                UnityEditor.AssetDatabase.Refresh();
+                Debug.Log("Project files regenerated via reflection.");
+                CleanExtraCsprojFiles();
+            }
+            else
+            {
+                Debug.LogError("Failed to find SyncSolution method.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Failed to find UnityEditor.SyncVS class.");
+        }
 
-        // Aguarda um pouco pra garantir que os arquivos foram gerados
-        System.Threading.Thread.Sleep(1000);
-
-        // Filtra e remove csproj desnecessários
-        CleanExtraCsprojFiles();
-
-        Debug.Log("[NvimUnity] Project files regenerated.");
     }
 
     private static void CleanExtraCsprojFiles()
