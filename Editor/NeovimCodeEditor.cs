@@ -61,7 +61,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
 	          Debug.Log($"[NvimUnity] Running command: cmd.exe /c \"\"{launchScript}\" \"{fullPath}\" +{line}\"");
 
-            RunCmdCommand($"\"\"{launchScript}\" \"{filePath}\" +{line}\"");
+            RunCmdCommand($"/c \"\"{launchScript}\" \"{filePath}\" +{line}\"");
 
             return true;
         }
@@ -74,7 +74,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
     void RunCmdCommand(string command)
     {
-        ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe", "/c " + command);
+        ProcessStartInfo processInfo = new ProcessStartInfo("cmd.exe",command);
         processInfo.CreateNoWindow = true;
         processInfo.UseShellExecute = false;
         processInfo.RedirectStandardOutput = true;
