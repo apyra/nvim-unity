@@ -12,7 +12,7 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
-    private static readonly string launcherPath = GetPackagesFolderPath() + "/NvimUnity/Launch/nvim-open";
+    private static readonly string launcherPath = NormalizePath(GetPackagesFolderPath() + "/NvimUnity/Launch/nvim-open");
 
     static NeovimCodeEditor()
     {
@@ -74,7 +74,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
             new CodeEditor.Installation
             {
                 Name = editorName,
-                Path = NormalizePath(GetLauncherPath())
+                Path = GetLauncherPath()
             }
         };
 
@@ -112,7 +112,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
       installation = new CodeEditor.Installation
       {
         Name = editorName,
-        Path =  NormalizePath(GetLauncherPath())
+        Path =  GetLauncherPath()
       };
     }
     else
@@ -126,7 +126,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         installation = new CodeEditor.Installation
         {
           Name = editorName,
-          Path = NormalizePath(editorPath)
+          Path = editorPath
         };
       }
     }
