@@ -12,7 +12,7 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
-    private static readonly string launcherPath = "Packages/apyra.nvim-unity/Launch/nvim-open";
+    private static readonly string launcherPath = GetPackagesFolderPath() + "/NvimUnity/Launch/nvim-open";
 
     static NeovimCodeEditor()
     {
@@ -165,6 +165,20 @@ public class NeovimCodeEditor : IExternalCodeEditor
             Directory.CreateDirectory(vscodePath);
             Debug.Log(".vscode folder created.");
         }
+    }
+
+    string GetPackagesFolderPath()
+    {
+        // Get the path to the Assets folder
+        string assetsPath = Application.dataPath;
+
+        // Navigate to the parent directory of the Assets folder
+        string projectPath = Directory.GetParent(assetsPath).FullName;
+
+        // Combine the project path with the Packages folder name
+        string packagesPath = Path.Combine(projectPath, "Packages");
+
+        return packagesPath;
     }
 
 }
