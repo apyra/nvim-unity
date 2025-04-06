@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
 using Unity.CodeEditor;
+using Debug = UnityEngine.Debug;
 
 [InitializeOnLoad]
 public class NeovimCodeEditor : IExternalCodeEditor
@@ -15,7 +16,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
     static NeovimCodeEditor()
     {
-        CodeEditor.Register(editorName, new NeovimCodeEditor());
+        CodeEditor.Register(new NeovimCodeEditor());
         EnsureProjectFiles();
     }
 
@@ -80,7 +81,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
   public void SyncAll()
   {
     AssetDatabase.Refresh();
-    EnsureProjectFiles();
+    SyncHelper.RegenerateProjectFiles();
   }
 
   // When you change Assets in Unity, this method for the current chosen instance of IExternalCodeEditor parses the new and changed Assets.
@@ -99,11 +100,11 @@ public class NeovimCodeEditor : IExternalCodeEditor
     var filename = Path.GetFileName(lowerCasePath).Replace(" ", "");
     var installations = Installations;
 
-    if (!_supportedFileNames.Contains(filename))
-    {
-      installation = default;
-      return false;
-    }
+    /*if (!_supportedFileNames.Contains(filename))*/
+    /*{*/
+    /*  installation = default;*/
+    /*  return false;*/
+    /*}*/
 
     if (!installations.Any())
     {
@@ -154,15 +155,15 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         if (!hasCsproj || !hasSln)
         {
-            UnityEngine.Debug.Log("Generating missing project files...");
-            UnityEditor.SyncVS.SyncSolution();
+            Debug.Log("Generating missing project files...");
+            SyncHelper.RegenerateProjectFiles();
         }
 
         string vscodePath = Path.Combine(rootPath, ".vscode");
         if (!Directory.Exists(vscodePath))
         {
             Directory.CreateDirectory(vscodePath);
-            UnityEngine.Debug.Log(".vscode folder created.");
+            Debug.Log(".vscode folder created.");
         }
     }
 

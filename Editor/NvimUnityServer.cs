@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 [InitializeOnLoad]
 public static class NvimUnityServer
@@ -27,7 +28,7 @@ public static class NvimUnityServer
         _listenerThread = new Thread(() =>
         {
             _listener.Start();
-            Debug.Log("[nvim-unity] HTTP Server started on http://localhost:5005");
+            Debug.Log("[NvimUnity] HTTP Server started on http://localhost:5005");
 
             while (_isRunning)
             {
@@ -48,7 +49,7 @@ public static class NvimUnityServer
         string path = context.Request.Url.AbsolutePath;
         if (path == "/regenerate")
         {
-            Debug.Log("[nvim-unity] Regenerate command received from Neovim.");
+            Debug.Log("[NvimUnity] Regenerate command received from Neovim.");
             UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
             UnityEditorInternal.InternalEditorUtility.RequestScriptReload();
             RegenerateProjectFiles();
@@ -72,7 +73,7 @@ public static class NvimUnityServer
         _isRunning = false;
         _listener?.Stop();
         _listenerThread?.Abort();
-        Debug.Log("[nvim-unity] HTTP Server stopped.");
+        Debug.Log("[NvimUnity] HTTP Server stopped.");
     }
 }
 
