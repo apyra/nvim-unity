@@ -66,9 +66,11 @@ public class NeovimCodeEditor : IExternalCodeEditor
                 StartInfo = new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
-                    Arguments = $"/c \"\"{launchScript}\" \"{fullPath}\" +{line}\"",
+                    Arguments = $"/c \"\"{launchScript}\" \"{filePath}\" +{line}\"",
                     CreateNoWindow = true,
-                    UseShellExecute = false
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                 }
             };
 
