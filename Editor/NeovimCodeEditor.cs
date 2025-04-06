@@ -74,7 +74,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
             new CodeEditor.Installation
             {
                 Name = editorName,
-                Path = GetLauncherPath()
+                Path = NormalizePath(GetLauncherPath())
             }
         };
 
