@@ -1,32 +1,44 @@
-using System;
-using System.Reflection;
+using System.IO;
+using System.Linq;
 using UnityEditor;
-using Debug = UnityEngine.Debug;
+using UnityEngine;
 
 public static class SyncHelper
 {
     public static void RegenerateProjectFiles()
     {
-        var editorAssembly = typeof(UnityEditor.Editor).Assembly;
-        var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
+        Debug.Log("[NvimUnity] Regenerating solution and C# project files...");
 
-        if (syncVS != null)
+        // Chama API interna do Unity para regenerar arquivos
+        UnityEditor.SyncVS.SyncSolution();
+
+        // Aguarda um pouco pra garantir que os arquivos foram gerados
+        System.Threading.Thread.Sleep(1000);
+
+        // Filtra e remove csproj desnecessários
+        CleanExtraCsprojFiles();
+
+        Debug.Log("[NvimUnity] Project files regenerated.");
+    }
+
+    private static void CleanExtraCsprojFiles()
+    {
+        string root = Directory.GetCurrentDirectory();
+        string[] allCsproj = Directory.GetFiles(root, "*.csproj", SearchOption.TopDirectoryOnly);
+
+        var keep = new[]
         {
-            var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (syncMethod != null)
-            {
-                syncMethod.Invoke(null, null);
-                UnityEditor.AssetDatabase.Refresh();
-                Debug.Log("Project files regenerated via reflection.");
-            }
-            else
-            {
-                Debug.LogError("Failed to find SyncSolution method.");
-            }
-        }
-        else
+            "Assembly-CSharp.csproj",
+            $"{new DirectoryInfo(root).Name}.csproj"
+        };
+
+        foreach (string file in allCsproj)
         {
-            Debug.LogError("Failed to find UnityEditor.SyncVS class.");
+            if (!keep.Any(k => Path.GetFileName(file).Equals(k)))
+            {
+                Debug.Log($"[NvimUnity] Deleting extra .csproj: {Path.GetFileName(file)}");
+                File.Delete(file);
+            }
         }
     }
 }

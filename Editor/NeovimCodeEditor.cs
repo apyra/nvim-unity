@@ -11,6 +11,7 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
+    private static readonly string launcher = NormalizePath(GetLauncherPath());
 
     static NeovimCodeEditor()
     {
@@ -50,24 +51,28 @@ public class NeovimCodeEditor : IExternalCodeEditor
         string quotedFile = $"\"{fullPath}\"";
         string lineArg = $"+{line}";
 
+        if (!File.Exists(launcher))
+        {
+            Debug.LogError($"[NvimUnity] Launcher not found: {launcher}");
+            return false;
+        }
+
+        Debug.Log($"[NvimUnity] Using launcher: {launcher}");
         Debug.Log($"[NvimUnity] Opening: {fullPath} at line {line}");
 
         try
         {
-            string command = "nvr";
-            string args = $"--remote-tab {quotedFile} {lineArg}";
-
-            if (!CommandExists("nvr"))
-            {
-                Debug.LogWarning("[NvimUnity] nvr not found, falling back to nvim with --listen");
-                command = "nvim";
-                args = $"--listen \\\\.\\pipe\\nvim-pipe {quotedFile} {lineArg}";
-            }
-
+#if UNITY_EDITOR_WIN
             var psi = new ProcessStartInfo
             {
-                FileName = command,
-                Arguments = args,
+                FileName = "cmd.exe",
+                Arguments = $"/c \"\"{launcher}\" {quotedFile} {lineArg}\"",
+#else
+            var psi = new ProcessStartInfo
+            {
+                FileName = launcher,
+                Arguments = $"{quotedFile} {lineArg}",
+#endif
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
@@ -85,33 +90,9 @@ public class NeovimCodeEditor : IExternalCodeEditor
     private static bool IsNvimUnityDefaultEditor()
     {
         string defaultApp = NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
-        string expectedPath = NormalizePath(Process.GetCurrentProcess().MainModule.FileName); // Fallback to current app
-        return defaultApp.Contains("nvim-unity"); // Mais permissivo
-    }
+        string expectedPath = NormalizePath(GetLauncherPath());
 
-    private static bool CommandExists(string command)
-    {
-        try
-        {
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = "where",
-                Arguments = command,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false
-            };
-
-            using (Process p = Process.Start(psi))
-            {
-                p.WaitForExit();
-                return p.ExitCode == 0;
-            }
-        }
-        catch
-        {
-            return false;
-        }
+        return defaultApp.Contains("nvim-unity") || defaultApp.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
     }
 
     public void OnGUI()
@@ -131,7 +112,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         new CodeEditor.Installation
         {
             Name = editorName,
-            Path = "nvim-unity" // Fictício, pois não usamos mais caminho exato
+            Path = launcher
         }
     };
 
@@ -151,9 +132,21 @@ public class NeovimCodeEditor : IExternalCodeEditor
         installation = new CodeEditor.Installation
         {
             Name = editorName,
-            Path = "nvim-unity"
+            Path = launcher
         };
         return true;
+    }
+
+    private static string GetLauncherPath()
+    {
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string scriptPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launch/nvim-open");
+
+#if UNITY_EDITOR_WIN
+        return scriptPath + ".bat";
+#else
+        return scriptPath + ".sh";
+#endif
     }
 
     private static string NormalizePath(string path)
