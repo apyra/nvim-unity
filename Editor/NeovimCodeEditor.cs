@@ -11,9 +11,19 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
+    private static readonly string launcherPath;
+    private static readonly bool isWindows;
 
     static NeovimCodeEditor()
     {
+        isWindows = Application.platform == RuntimePlatform.WindowsEditor;
+        launcherPath = NormalizePath(GetLauncherPath());
+
+        if (!File.Exists(launcherPath))
+        {
+            Debug.LogWarning($"[NvimUnity] Launcher script not found at: {launcherPath}");
+        }
+
         CodeEditor.Register(new NeovimCodeEditor());
     }
 
@@ -47,14 +57,13 @@ public class NeovimCodeEditor : IExternalCodeEditor
         if (line < 1) line = 1;
 
         string fullPath = Path.GetFullPath(filePath);
-        string launcher = NormalizePath(GetLauncherPath());
 
         Debug.Log($"[NvimUnity] Opening file: {fullPath} at line {line}");
-        Debug.Log($"[NvimUnity] Using launcher: {launcher}");
+        Debug.Log($"[NvimUnity] Using launcher: {launcherPath}");
 
-        if (!File.Exists(launcher))
+        if (!File.Exists(launcherPath))
         {
-            Debug.LogError($"[NvimUnity] Launch script not found: {launcher}");
+            Debug.LogError($"[NvimUnity] Launcher script not found: {launcherPath}");
             return false;
         }
 
@@ -62,9 +71,9 @@ public class NeovimCodeEditor : IExternalCodeEditor
         {
             var psi = new ProcessStartInfo
             {
-                FileName = launcher,
-                Arguments = $"\"{fullPath}\" +{line}",
-                UseShellExecute = true,
+                FileName = isWindows ? launcherPath : "/bin/bash",
+                Arguments = isWindows ? $"\"{fullPath}\" {line}" : $"\"{launcherPath}\" \"{fullPath}\" {line}",
+                UseShellExecute = isWindows,
                 CreateNoWindow = false
             };
 
@@ -81,9 +90,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
     private static bool IsNvimUnityDefaultEditor()
     {
         string defaultApp = NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
-        string expectedPath = NormalizePath(GetLauncherPath());
-
-        return string.Equals(defaultApp, expectedPath, StringComparison.OrdinalIgnoreCase);
+        return string.Equals(defaultApp, launcherPath, StringComparison.OrdinalIgnoreCase);
     }
 
     public void OnGUI()
@@ -103,7 +110,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         new CodeEditor.Installation
         {
             Name = editorName,
-            Path = GetLauncherPath()
+            Path = launcherPath
         }
     };
 
@@ -127,7 +134,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
             installation = new CodeEditor.Installation
             {
                 Name = editorName,
-                Path = GetLauncherPath()
+                Path = launcherPath
             };
         }
         else
@@ -168,29 +175,6 @@ public class NeovimCodeEditor : IExternalCodeEditor
 #else
         return path.Replace("\\", "/");
 #endif
-    }
-
-    private static void EnsureProjectFiles()
-    {
-        string rootPath = Directory.GetCurrentDirectory();
-        string projectName = new DirectoryInfo(rootPath).Name;
-        string slnPath = Path.Combine(rootPath, $"{projectName}.sln");
-
-        bool hasCsproj = Directory.GetFiles(rootPath, "*.csproj", SearchOption.TopDirectoryOnly).Length > 0;
-        bool hasSln = File.Exists(slnPath);
-
-        if (!hasCsproj || !hasSln)
-        {
-            Debug.Log("[NvimUnity] Generating missing project files...");
-            SyncHelper.RegenerateProjectFiles();
-        }
-
-        string vscodePath = Path.Combine(rootPath, ".vscode");
-        if (!Directory.Exists(vscodePath))
-        {
-            Directory.CreateDirectory(vscodePath);
-            Debug.Log("[NvimUnity] .vscode folder created.");
-        }
     }
 }
 
