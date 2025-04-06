@@ -68,7 +68,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
                     FileName = "cmd.exe",
                     Arguments = $"/c \"\"{launchScript}\" \"{fullPath}\" +{line}\"",
                     CreateNoWindow = true,
-                    UseShellExecute = true
+                    UseShellExecute = false
                 }
             };
 
