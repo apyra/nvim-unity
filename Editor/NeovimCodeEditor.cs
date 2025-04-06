@@ -68,8 +68,8 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
 
         Debug.Log($"[NvimUnity] Lançando Neovim com:");
-        Debug.Log($"  Launcher: {launcher}");
-        Debug.Log($"  File exists? {File.Exists(launcher)}");
+        Debug.Log($"  Launcher: {launcherPath}");
+        Debug.Log($"  File exists? {File.Exists(launcherPath)}");
         Debug.Log($"  Arguments: \"{fullPath}\" +{line}");
 
 
@@ -86,7 +86,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
             var psi = new ProcessStartInfo
 {
     FileName = "cmd.exe",
-    Arguments = $"/c \"\"{launcher}\" \"{fullPath}\" +{line}\"",
+    Arguments = $"/c \"\"{launcherPath}\" \"{fullPath}\" +{line}\"",
     UseShellExecute = false,
     CreateNoWindow = false,
     RedirectStandardOutput = true,
