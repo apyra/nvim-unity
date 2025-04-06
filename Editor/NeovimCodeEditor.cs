@@ -67,15 +67,33 @@ public class NeovimCodeEditor : IExternalCodeEditor
             return false;
         }
 
+        Debug.Log($"[NvimUnity] Lançando Neovim com:");
+        Debug.Log($"  Launcher: {launcher}");
+        Debug.Log($"  File exists? {File.Exists(launcher)}");
+        Debug.Log($"  Arguments: \"{fullPath}\" +{line}");
+
+
         try
         {
+            /*var psi = new ProcessStartInfo*/
+            /*{*/
+            /*    FileName = isWindows ? launcherPath : "/bin/bash",*/
+            /*    Arguments = isWindows ? $"\"{fullPath}\" {line}" : $"\"{launcherPath}\" \"{fullPath}\" {line}",*/
+            /*    UseShellExecute = isWindows,*/
+            /*    CreateNoWindow = false*/
+            /*};*/
+
             var psi = new ProcessStartInfo
-            {
-                FileName = isWindows ? launcherPath : "/bin/bash",
-                Arguments = isWindows ? $"\"{fullPath}\" {line}" : $"\"{launcherPath}\" \"{fullPath}\" {line}",
-                UseShellExecute = isWindows,
-                CreateNoWindow = false
-            };
+{
+    FileName = "cmd.exe",
+    Arguments = $"/c \"\"{launcher}\" \"{fullPath}\" +{line}\"",
+    UseShellExecute = false,
+    CreateNoWindow = false,
+    RedirectStandardOutput = true,
+    RedirectStandardError = true,
+    WorkingDirectory = Path.GetDirectoryName(launcher)
+};
+
 
             Process.Start(psi);
             return true;
