@@ -6,7 +6,7 @@ public static class NeovimMenu
     public static void RegenerateProjectFiles()
     {
         AssetDatabase.Refresh();
-        UnityEditor.SyncVS.SyncSolution();
+        SyncHelper.RegenerateProjectFiles();
         UnityEngine.Debug.Log("Project files regenerated.");
     }
     
