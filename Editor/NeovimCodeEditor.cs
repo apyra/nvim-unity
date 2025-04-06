@@ -216,6 +216,10 @@ public class NeovimCodeEditor : IExternalCodeEditor
     {
         var current = EditorPrefs.GetString("kScriptsDefaultApp");
         string expected = NormalizePath(GetLauncherPath());
+        
+        Debug.Log($"[NvimUnity] EditorPrefs current: {current}");
+        Debug.Log($"[NvimUnity] Expected launcher: {expected}");
+
         return string.Equals(current, expected, StringComparison.OrdinalIgnoreCase);
     }
 
