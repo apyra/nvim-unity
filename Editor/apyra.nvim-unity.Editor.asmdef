@@ -1,7 +1,8 @@
 {
   "name": "apyra.nvim-unity.Editor",
-  "references": [
-    "apyra.nvim-unity"
-  ],
-  "includePlatforms": ["Editor"]
+  "references": [],
+  "optionalUnityReferences": [ "TestAssemblies" ],
+  "includePlatforms": [ "Editor" ],
+  "rootNamespace": "",
+  "allowUnsafeCode": false
 }

@@ -1,5 +1,3 @@
-using System;
-using System.Reflection;
 using System.Diagnostics;
 using System.IO;
 using UnityEditor;
@@ -48,7 +46,7 @@ public static class NvimUnityEditor
     public static void RegenerateProjectFiles()
     {
         AssetDatabase.Refresh();
-        SyncHelper.RegenerateProjectFiles();
+        UnityEditor.SyncVS.SyncSolution();
         UnityEngine.Debug.Log("Project files regenerated.");
     }
 
@@ -64,7 +62,7 @@ public static class NvimUnityEditor
         if (!hasCsproj || !hasSln)
         {
             UnityEngine.Debug.Log("Generating missing project files...");
-            SyncHelper.RegenerateProjectFiles();
+            UnityEditor.SyncVS.SyncSolution();
         }
 
         string vscodePath = Path.Combine(rootPath, ".vscode");
@@ -72,34 +70,6 @@ public static class NvimUnityEditor
         {
             Directory.CreateDirectory(vscodePath);
             UnityEngine.Debug.Log(".vscode folder created.");
-        }
-    }
-}
-
-public static class SyncHelper
-{
-    public static void RegenerateProjectFiles()
-    {
-        var editorAssembly = typeof(UnityEditor.Editor).Assembly;
-        var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
-
-        if (syncVS != null)
-        {
-            var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (syncMethod != null)
-            {
-                syncMethod.Invoke(null, null);
-                UnityEditor.AssetDatabase.Refresh();
-                UnityEngine.Debug.Log("Project files regenerated via reflection.");
-            }
-            else
-            {
-                UnityEngine.Debug.LogError("Failed to find SyncSolution method.");
-            }
-        }
-        else
-        {
-            UnityEngine.Debug.LogError("Failed to find UnityEditor.SyncVS class.");
         }
     }
 }
