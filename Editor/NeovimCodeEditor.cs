@@ -9,12 +9,13 @@ using UnityEngine;
 [InitializeOnLoad]
 public class NeovimCodeEditor : IExternalCodeEditor
 {
-    private static readonly string editorName = "Neovim (nvim-unity)";
+    private static readonly string editorName = "Neovim (NvimUnity)";
     private static readonly string launcherPath = "Packages/com.apyra.nvim-unity/Launch/nvim-launch";
 
     static NeovimCodeEditor()
     {
         CodeEditor.Register(editorName, new NeovimCodeEditor());
+        EnsureProjectFiles();
     }
 
     public string GetDisplayName()
@@ -34,12 +35,14 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         if (!File.Exists(launchScript))
         {
-            Debug.LogError($"[nvim-unity] Launch script not found: {launchScript}");
+            Debug.LogError($"[NvimUnity] Launch script not found: {launchScript}");
             return false;
         }
 
         try
         {
+            EnsureProjectFiles();
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = launchScript,
@@ -50,7 +53,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         }
         catch (Exception e)
         {
-            Debug.LogError("[nvim-unity] Failed to launch Neovim: " + e.Message);
+            Debug.LogError("[NvimUnity] Failed to launch Neovim: " + e.Message);
             return false;
         }
     }
@@ -82,5 +85,29 @@ public class NeovimCodeEditor : IExternalCodeEditor
         return launcherPath;
 #endif
     }
+
+    private static void EnsureProjectFiles()
+    {
+        string rootPath = Directory.GetCurrentDirectory();
+        string projectName = new DirectoryInfo(rootPath).Name;
+        string slnPath = Path.Combine(rootPath, $"{projectName}.sln");
+
+        bool hasCsproj = Directory.GetFiles(rootPath, "*.csproj", SearchOption.TopDirectoryOnly).Length > 0;
+        bool hasSln = File.Exists(slnPath);
+
+        if (!hasCsproj || !hasSln)
+        {
+            UnityEngine.Debug.Log("Generating missing project files...");
+            UnityEditor.SyncVS.SyncSolution();
+        }
+
+        string vscodePath = Path.Combine(rootPath, ".vscode");
+        if (!Directory.Exists(vscodePath))
+        {
+            Directory.CreateDirectory(vscodePath);
+            UnityEngine.Debug.Log(".vscode folder created.");
+        }
+    }
+
 }
 
