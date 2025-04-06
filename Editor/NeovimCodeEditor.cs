@@ -5,6 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEditorInternal;
 using UnityEngine;
+using Unity.CodeEditor;
 
 [InitializeOnLoad]
 public class NeovimCodeEditor : IExternalCodeEditor
