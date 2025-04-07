@@ -23,6 +23,7 @@ namespace NvimUnity
         static NvimUnityServer()
         {
             Debug.Log("[NvimUnity] Initializing server...");
+            StopServer();
             LoadConfig();
             StartServer();
         }
