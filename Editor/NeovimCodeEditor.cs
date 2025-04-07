@@ -48,6 +48,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         if (line < 1) line = 1;
 
         string fullPath = Path.GetFullPath(filePath);
+        string quotedFile = $"\"{fullPath}\"";
         string lineArg = $"+{line}";
 
         if (!File.Exists(launcher))
