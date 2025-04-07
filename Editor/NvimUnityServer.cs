@@ -42,6 +42,8 @@ namespace NvimUnity
 
         private static void InitOnce()
         {
+            EnsureLauncherExecutable();
+
             if (_initialized) return;
             _initialized = true;
 
@@ -249,12 +251,36 @@ namespace NvimUnity
         }
 
         // --- Helpers ---
-        private static string BuildLauncherCommand(string filePath, int line)
+        
+        private static void EnsureLauncherExecutable()
         {
-            string launcherPath = Path.GetFullPath("nvim-open.bat").Replace("\\", "/");
-            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+#if !UNITY_EDITOR_WIN
+            try
+            {
+                string path = GetLauncherPath();
+                if (File.Exists(path))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "/bin/chmod",
+                        Arguments = $"+x \"{path}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
+            }
+#endif
         }
 
+        private static string BuildLauncherCommand(string filePath, int line)
+        {
+            string launcherPath = Path.GetFullPath(Utils.NormalizePath(Utils.GetLauncherPath()));
+            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+        }
 
         private static void RunDetachedTerminalFallbacks(string cmd)
         {

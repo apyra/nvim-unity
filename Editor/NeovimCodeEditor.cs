@@ -13,13 +13,12 @@ namespace NvimUnity
     public class NeovimCodeEditor : IExternalCodeEditor
     {
         private static readonly string editorName = "Neovim (NvimUnity)";
-        private static readonly string launcher = Path.GetFullPath(Utils.NormalizePath(GetLauncherPath()));
 
         static NeovimCodeEditor()
         {
             Debug.Log("[NvimUnity] Registering NeovimCodeEditor...");
             CodeEditor.Register(new NeovimCodeEditor());
-            EnsureLauncherExecutable();
+            
         }
 
         public string GetDisplayName() => editorName;
@@ -36,35 +35,10 @@ namespace NvimUnity
             return NvimUnityServer.OpenFile(filePath, line);
         }
 
-
-        private static void EnsureLauncherExecutable()
-        {
-#if !UNITY_EDITOR_WIN
-            try
-            {
-                string path = GetLauncherPath();
-                if (File.Exists(path))
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "/bin/chmod",
-                        Arguments = $"+x \"{path}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
-            }
-#endif
-        }
-
         private static bool IsNvimUnityDefaultEditor()
         {
             string defaultApp = Utils.NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
-            string expectedPath = Utils.NormalizePath(GetLauncherPath());
+            string expectedPath = Utils.NormalizePath(Utils.GetLauncherPath());
 
             return defaultApp.Contains("nvim-unity") || 
                    defaultApp.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
@@ -119,17 +93,7 @@ namespace NvimUnity
             return true;
         }
 
-        private static string GetLauncherPath()
-        {
-            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string scriptPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/nvim-open");
-
-#if UNITY_EDITOR_WIN
-            return scriptPath + ".bat";
-#else
-            return scriptPath + ".sh";
-#endif
-        }
+        
     }
 }
 
