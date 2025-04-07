@@ -162,7 +162,7 @@ namespace NvimUnity
         private static string GetLauncherPath()
         {
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string scriptPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/nvim-open");
+            string scriptPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launch/nvim-open");
 
 #if UNITY_EDITOR_WIN
             return scriptPath + ".bat";

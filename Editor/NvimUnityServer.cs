@@ -29,7 +29,7 @@ namespace NvimUnity
         private static void LoadConfig()
         {
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string configPath = Path.GetFullPath(Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json"));
+            string configPath = Path.GetFullPath("Packages/com.apyra.nvim-unity/Launch/config.json");
 
             Debug.Log("[NvimUnity] Loading config from: " + configPath);
 
