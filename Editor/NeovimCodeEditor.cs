@@ -105,7 +105,7 @@ namespace NvimUnity
 
             GUILayout.Label("NvimUnity HTTP Server", EditorStyles.boldLabel);
             GUILayout.Label("Status: " + NvimUnityServer.GetStatus());
-            ServerAddress = GUILayout.TextField(NvimUnityServer.ServerAddress);
+            NvimUnityServer.ServerAddress = GUILayout.TextField(NvimUnityServer.ServerAddress);
 
             if (GUILayout.Button("Restart Server"))
             {
