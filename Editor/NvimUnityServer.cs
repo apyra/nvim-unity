@@ -163,6 +163,36 @@ namespace NvimUnity
 #endif
         }
 
+        private static Process RunDetachedTerminal(string command)
+        {
+#if UNITY_EDITOR_WIN
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c start \"\" {command}",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+#elif UNITY_EDITOR_OSX
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{command} &\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+#else // Linux
+            return Process.Start(new ProcessStartInfo
+            {
+                FileName = "/bin/bash",
+                Arguments = $"-c \"{command} &\"",
+                CreateNoWindow = true,
+                UseShellExecute = false
+            });
+#endif
+        }
+
+
         public static void StopServer()
         {
             _isRunning = false;

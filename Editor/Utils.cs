@@ -47,7 +47,17 @@ namespace NvimUnity
             }
         }
 
-        private static string NormalizePath(string path)
+        public static string FindProjectRoot(string path)
+        {
+            var dir = new DirectoryInfo(Path.GetDirectoryName(path));
+            while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Assets")))
+            {
+                dir = dir.Parent;
+            }
+            return dir?.FullName;
+        }
+
+        public static string NormalizePath(string path)
         {
 #if UNITY_EDITOR_WIN
             return path.Replace("/", "\\");
