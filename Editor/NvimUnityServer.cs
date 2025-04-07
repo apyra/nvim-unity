@@ -251,8 +251,10 @@ namespace NvimUnity
         // --- Helpers ---
         private static string BuildLauncherCommand(string filePath, int line)
         {
-            return $"nvim-open.bat \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+            string launcherPath = Path.GetFullPath("nvim-open.bat").Replace("\\", "/");
+            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
         }
+
 
         private static void RunDetachedTerminalFallbacks(string cmd)
         {

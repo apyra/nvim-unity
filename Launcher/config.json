@@ -1,7 +1,7 @@
 {
   "terminals": {
     "Windows": [
-      "wt -w 0 nt -d . cmd /k {cmd}",
+      "wt -w 0 nt -d . cmd /c {cmd}",
       "start cmd /c {cmd}"
     ],
     "Linux": [

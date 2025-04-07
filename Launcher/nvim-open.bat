@@ -6,6 +6,7 @@ set FILE=%1
 set LINE=%2
 set SERVER=%3
 
+
 :: Testa se o servidor está online
 curl -s --max-time 1 %SERVER%status >nul
 if errorlevel 1 (

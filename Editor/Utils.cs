@@ -77,7 +77,7 @@ namespace NvimUnity
             if (terminals.Count == 0)
             {
 #if UNITY_EDITOR_WIN
-                terminals.Add($"wt -w 0 nt -d . cmd /k {cmd}");
+                terminals.Add($"wt -w 0 nt -d . cmd /c {cmd}");
 #elif UNITY_EDITOR_OSX
                 terminals.Add($"osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'");
 #else
