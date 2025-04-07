@@ -14,7 +14,6 @@ namespace NvimUnity
     {
         private static readonly string editorName = "Neovim (NvimUnity)";
         private static readonly string launcher = Path.GetFullPath(Utils.NormalizePath(GetLauncherPath()));
-        private static readonly HttpClient httpClient = new HttpClient();
 
         static NeovimCodeEditor()
         {
