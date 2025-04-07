@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Unity.CodeEditor;
@@ -49,7 +48,6 @@ public class NeovimCodeEditor : IExternalCodeEditor
         if (line < 1) line = 1;
 
         string fullPath = Path.GetFullPath(filePath);
-        string quotedFile = $"\"{fullPath}\"";
         string lineArg = $"+{line}";
 
         if (!File.Exists(launcher))
@@ -63,19 +61,16 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         try
         {
+            var psi = new ProcessStartInfo
+            {
 #if UNITY_EDITOR_WIN
-            var psi = new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = $"/c \"\"{launcher}\" {quotedFile} {lineArg}\"",
-#else
-            var psi = new ProcessStartInfo
-            {
                 FileName = launcher,
-                Arguments = $"{quotedFile} {lineArg}",
+                Arguments = $"\"{fullPath}\" {lineArg}",
+#else
+                FileName = "/bin/bash",
+                Arguments = $"\"{launcher}\" \"{fullPath}\" {lineArg}",
 #endif
-                UseShellExecute = false,
-                CreateNoWindow = true
+                UseShellExecute = true,
             };
 
             Process.Start(psi);
@@ -91,34 +86,32 @@ public class NeovimCodeEditor : IExternalCodeEditor
     private static void EnsureLauncherExecutable()
     {
 #if !UNITY_EDITOR_WIN
-    try
-    {
-        string path = GetLauncherPath();
-        if (File.Exists(path))
+        try
         {
-            Process.Start(new ProcessStartInfo
+            string path = GetLauncherPath();
+            if (File.Exists(path))
             {
-                FileName = "/bin/chmod",
-                Arguments = $"+x \"{path}\"",
-                UseShellExecute = false,
-                CreateNoWindow = true
-            });
-            Debug.Log($"[NvimUnity] Ensured script executable: {path}");
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "/bin/chmod",
+                    Arguments = $"+x \"{path}\"",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                Debug.Log($"[NvimUnity] Ensured script executable: {path}");
+            }
         }
-    }
-    catch (Exception e)
-    {
-        Debug.LogWarning("[NvimUnity] Failed to set script as executable: " + e.Message);
-    }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[NvimUnity] Failed to set script as executable: " + e.Message);
+        }
 #endif
     }
-
 
     private static bool IsNvimUnityDefaultEditor()
     {
         string defaultApp = NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
         string expectedPath = NormalizePath(GetLauncherPath());
-
         return defaultApp.Contains("nvim-unity") || defaultApp.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -149,10 +142,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
         SyncHelper.RegenerateProjectFiles();
     }
 
-    public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
-    {
-        // Optional sync
-    }
+    public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles) {}
 
     public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
     {
