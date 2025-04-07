@@ -58,9 +58,9 @@ You can edit it to match your preferred terminal for each OS:
 ```json
 {
   "terminals": {
-    "Windows": "wt",
-    "Linux": "gnome-terminal",
-    "OSX": "open -a Terminal"
+    "Windows": ["wt -w 0 nt -d . cmd /k {cmd}", "start cmd /k {cmd}"],
+    "Linux": ["gnome-terminal -- bash -c '{cmd}'", "x-terminal-emulator -e bash -c '{cmd}'"],
+    "OSX": ["osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'", "open -a Terminal \"{cmd}\""]
   }
 }
 ```
@@ -84,7 +84,6 @@ This tells the launcher which terminal to use per OS. You can use any terminal y
 
 ## How It Works
 
-- `nvim-open.bat/.sh` reads the `config.json` to determine which terminal to launch.
 - If a Neovim instance already exists for the Unity project, it reuses it.
 - `NvimUnityServer.cs` handles incoming HTTP `/open` and `/regenerate` commands.
 

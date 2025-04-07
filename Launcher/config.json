@@ -1,9 +1,17 @@
 {
   "terminals": {
-    "Windows": ["wt -w 0 nt -d . cmd /k {cmd}", "start cmd /k {cmd}"],
-    "Linux": ["gnome-terminal -- bash -c '{cmd}'", "x-terminal-emulator -e bash -c '{cmd}'"],
-    "OSX": ["osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'", "open -a Terminal \"{cmd}\""]
+    "Windows": [
+      "wt -w 0 nt -d . cmd /k {cmd}",
+      "start cmd /c {cmd}"
+    ],
+    "Linux": [
+      "gnome-terminal -- bash -c '{cmd}'",
+      "x-terminal-emulator -e bash -c '{cmd}'"
+    ],
+    "OSX": [
+      "osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'",
+      "open -a Terminal \"{cmd}\""
+    ]
   }
 }
-
 

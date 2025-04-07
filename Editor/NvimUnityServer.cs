@@ -1,3 +1,4 @@
+/ NvimUnityServer.cs
 using System;
 using System.IO;
 using System.Net;
@@ -8,7 +9,6 @@ using UnityEngine;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
-using System.Net.Http;
 
 namespace NvimUnity
 {
@@ -19,19 +19,34 @@ namespace NvimUnity
         private static Thread _listenerThread;
         private static bool _isRunning = false;
         private static Dictionary<string, string> _terminalByOS = new();
+        public static string _status = "Stopped";
+        private static string _serverAddress = "http://localhost:5005/";
+        public static string ServerAddress
+        {
+            get => _serverAddress;
+            set
+            {
+                if (!_isRunning)
+                    _serverAddress = value;
+                else
+                    Debug.LogWarning("[NvimUnity] Cannot change server address while server is running.");
+            }
+        }
 
         static NvimUnityServer()
         {
             Debug.Log("[NvimUnity] Initializing server...");
-            StopServer();
+            //StopServer();
             LoadConfig();
             StartServer();
         }
 
+        public static string GetStatus() => _status;
+
         private static void LoadConfig()
         {
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string configPath = Path.GetFullPath(Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json"));
+            string configPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json");
 
             Debug.Log("[NvimUnity] Loading config from: " + configPath);
 
@@ -40,7 +55,7 @@ namespace NvimUnity
                 try
                 {
                     string json = File.ReadAllText(configPath);
-                    var parsed = JsonUtility.FromJson<Wrapper>(json);
+                    var parsed = JsonUtility.FromJson<Wrapper>("{\"terminals\":" + json + "}");
                     if (parsed.terminals != null)
                         _terminalByOS = parsed.terminals;
                     Debug.Log("[NvimUnity] Loaded terminal configuration");
@@ -62,35 +77,26 @@ namespace NvimUnity
             public Dictionary<string, string> terminals;
         }
 
-        [Serializable]
-        private class ListWrapper
-        {
-            public List<string> templates;
-        }
-
-        [Serializable]
-        private class TerminalArrayWrapper
-        {
-            public List<string> templates;
-        }
-
         public static void StartServer()
         {
             if (_isRunning) return;
 
             _isRunning = true;
+            _status = "Starting...";
             _listener = new HttpListener();
-            _listener.Prefixes.Add("http://localhost:5005/");
+            _listener.Prefixes.Add(ServerAddress);
 
             _listenerThread = new Thread(() =>
             {
                 try
                 {
                     _listener.Start();
-                    Debug.Log("[NvimUnity] HTTP Server started on port 5005");
+                    _status = "Running";
+                    Debug.Log("[NvimUnity] HTTP Server started on: " + ServerAddress);
                 }
                 catch (Exception e)
                 {
+                    _status = "Error: " + e.Message;
                     Debug.LogError("[NvimUnity] Failed to start HTTP Server: " + e.Message);
                     return;
                 }
@@ -112,6 +118,15 @@ namespace NvimUnity
             _listenerThread.Start();
         }
 
+        public static void StopServer()
+        {
+            Debug.Log("[NvimUnity] Stopping server...");
+            _isRunning = false;
+            _status = "Stopped";
+            _listener?.Stop();
+            _listenerThread?.Abort();
+        }
+        
         private static void HandleRequest(HttpListenerContext context)
         {
             string path = context.Request.Url.AbsolutePath;
@@ -143,11 +158,6 @@ namespace NvimUnity
                     Debug.LogWarning("[NvimUnity] Received malformed open request");
                 }
             }
-            else if (path == "/status")
-            {
-                Debug.Log("[NvimUnity] Status check received");
-            }
-
 
             string response = "OK";
             byte[] buffer = Encoding.UTF8.GetBytes(response);
@@ -172,8 +182,8 @@ namespace NvimUnity
             Debug.Log("[NvimUnity] Socket path: " + socketPath);
 
             string cmd = File.Exists(socketPath)
-                ? GetNvimCommand(socketPath, fullPath, line)
-                : GetNvimListenCommand(socketPath, fullPath, line);
+                ? $"nvim --server \"{socketPath}\" --remote-tab +{line} \"{fullPath}\""
+                : $"nvim --listen \"{socketPath}\" +{line} \"{fullPath}\"";
 
             RunDetachedTerminalFallbacks(cmd);
         }
@@ -193,20 +203,10 @@ namespace NvimUnity
             }
         }
 
-        private static string GetNvimCommand(string socket, string filePath, int line)
-        {
-            return $"nvim --server \"{socket}\" --remote-tab +{line} \"{filePath}\"";
-        }
-
-        private static string GetNvimListenCommand(string socket, string filePath, int line)
-        {
-            return $"nvim --listen \"{socket}\" +{line} \"{filePath}\"";
-        }
-
         private static void RunDetachedTerminalFallbacks(string cmd)
         {
             string os = GetCurrentOS();
-            List<string> fallbackTerminals = GetTerminalsForOS(os, cmd);
+            List<string> fallbackTerminals = Utils.GetTerminalsForOS(_terminalByOS, os, cmd);
 
             foreach (string terminalCmd in fallbackTerminals)
             {
@@ -236,46 +236,6 @@ namespace NvimUnity
             throw new Exception("[NvimUnity] All terminal attempts failed.");
         }
 
-        private static List<string> GetTerminalsForOS(string os, string cmd)
-        {
-            List<string> terminals = new();
-
-            if (_terminalByOS.TryGetValue(os, out var raw))
-            {
-                if (raw.TrimStart().StartsWith("["))
-                {
-                    try
-                    {
-                        var wrapper = new TerminalArrayWrapper();
-                        wrapper.templates = JsonUtility.FromJson<ListWrapper>("{\"templates\":" + raw + "}").templates;
-                        foreach (var tmpl in wrapper.templates)
-                            terminals.Add(tmpl.Replace("{cmd}", cmd));
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogWarning($"[NvimUnity] Failed to parse array of terminals for {os}: {e.Message}");
-                    }
-                }
-                else
-                {
-                    terminals.Add(raw.Replace("{cmd}", cmd));
-                }
-            }
-
-            if (terminals.Count == 0)
-            {
-#if UNITY_EDITOR_WIN
-                terminals.Add($"wt -w 0 nt -d . cmd /k {cmd}");
-#elif UNITY_EDITOR_OSX
-                terminals.Add($"osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'");
-#else
-                terminals.Add($"x-terminal-emulator -e bash -c '{cmd}'");
-#endif
-            }
-
-            return terminals;
-        }
-
         private static string GetCurrentOS()
         {
 #if UNITY_EDITOR_WIN
@@ -285,14 +245,6 @@ namespace NvimUnity
 #else
             return "Linux";
 #endif
-        }
-
-        public static void StopServer()
-        {
-            Debug.Log("[NvimUnity] Stopping server...");
-            _isRunning = false;
-            _listener?.Stop();
-            _listenerThread?.Abort();
         }
     }
 }

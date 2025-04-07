@@ -102,6 +102,16 @@ namespace NvimUnity
             {
                 Utils.RegenerateProjectFiles();
             }
+
+            GUILayout.Label("NvimUnity HTTP Server", EditorStyles.boldLabel);
+            GUILayout.Label("Status: " + NvimUnityServer.GetStatus());
+            ServerAddress = GUILayout.TextField(NvimUnityServer.ServerAddress);
+
+            if (GUILayout.Button("Restart Server"))
+            {
+                NvimUnityServer.StopServer();
+                NvimUnityServer.StartServer();
+            }
         }
 
         public void Initialize(string editorInstallationPath)
