@@ -3,9 +3,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
@@ -22,7 +20,7 @@ namespace NvimUnity
                 if (syncMethod != null)
                 {
                     syncMethod.Invoke(null, null);
-                    UnityEditor.AssetDatabase.Refresh();
+                    AssetDatabase.Refresh();
                     CleanExtraCsprojFiles();
                 }
             }
@@ -41,7 +39,7 @@ namespace NvimUnity
 
             foreach (string file in allCsproj)
             {
-                if (!keep.Any(k => Path.GetFileName(file).Equals(k)))
+                if (!keep.Contains(Path.GetFileName(file)))
                 {
                     File.Delete(file);
                 }
@@ -50,8 +48,7 @@ namespace NvimUnity
 
         public static string GetLauncherPath()
         {
-            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string scriptPath = Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/nvim-open");
+            string scriptPath = Path.GetFullPath(Utils.NormalizePath("Packages/com.apyra.nvim-unity/Launcher/nvim-open"));
 
 #if UNITY_EDITOR_WIN
             return scriptPath + ".bat";
@@ -68,7 +65,7 @@ namespace NvimUnity
                 string path = GetLauncherPath();
                 if (File.Exists(path))
                 {
-                    Process.Start(new ProcessStartInfo
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                     {
                         FileName = "/bin/chmod",
                         Arguments = $"+x \"{path}\"",
@@ -90,63 +87,6 @@ namespace NvimUnity
             return $"\"{launcherPath}\" \"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
         }
 
-        public static List<string> GetTerminalsForOS(Dictionary<string, string> terminalByOS, string os, string cmd)
-        {
-            List<string> terminals = new();
-
-            if (terminalByOS.TryGetValue(os, out var raw))
-            {
-                try
-                {
-                    if (raw.TrimStart().StartsWith("["))
-                    {
-                        string json = "{\"templates\":" + raw + "}";
-                        var parsed = JsonUtility.FromJson<ListWrapper>(json);
-                        foreach (var tmpl in parsed.templates)
-                            terminals.Add(tmpl.Replace("{cmd}", cmd));
-                    }
-                    else
-                    {
-                        terminals.Add(raw.Replace("{cmd}", cmd));
-                    }
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[NvimUnity] Failed to parse terminals for {os}: {e.Message}");
-                }
-            }
-
-            if (terminals.Count == 0)
-            {
-#if UNITY_EDITOR_WIN
-                terminals.Add($"wt -w 0 nt -d . cmd /c {cmd}");
-#elif UNITY_EDITOR_OSX
-                terminals.Add($"osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'");
-#else
-                terminals.Add($"x-terminal-emulator -e bash -c '{cmd}'");
-#endif
-            }
-
-            return terminals;
-        }
-
-        public static string GetCurrentOS()
-        {
-#if UNITY_EDITOR_WIN
-            return "Windows";
-#elif UNITY_EDITOR_OSX
-            return "OSX";
-#else
-            return "Linux";
-#endif
-        }
-
-        [Serializable]
-        public class ListWrapper
-        {
-            public List<string> templates;
-        }
-
         public static string FindProjectRoot(string path)
         {
             var dir = new DirectoryInfo(Path.GetDirectoryName(path));
@@ -165,7 +105,6 @@ namespace NvimUnity
             return path.Replace("\\", "/");
 #endif
         }
-
     }
 }
 

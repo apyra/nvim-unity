@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Text;
 using UnityEditor;
 using UnityEngine;
 using Unity.CodeEditor;
@@ -19,7 +18,6 @@ namespace NvimUnity
         {
             Debug.Log("[NvimUnity] Registering NeovimCodeEditor...");
             CodeEditor.Register(new NeovimCodeEditor());
-            
         }
 
         public string GetDisplayName() => editorName;
@@ -39,10 +37,8 @@ namespace NvimUnity
         private static bool IsNvimUnityDefaultEditor()
         {
             string defaultApp = Utils.NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
-            string expectedPath = Utils.NormalizePath(Utils.GetLauncherPath());
-
-            return defaultApp.Contains("nvim-unity") || 
-                   defaultApp.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
+            return defaultApp.Contains("nvim-unity", StringComparison.OrdinalIgnoreCase)
+                   || defaultApp.Equals(launcher, StringComparison.OrdinalIgnoreCase);
         }
 
         public void OnGUI()
@@ -55,26 +51,26 @@ namespace NvimUnity
                 Utils.RegenerateProjectFiles();
             }
 
-            GUILayout.Label("NvimUnity HTTP Server", EditorStyles.boldLabel);
-            GUILayout.Label("Status: " + NvimUnityServer.GetStatus());
-            var address = GUILayout.TextField(NvimUnityServer.ServerAddress);
+            /*GUILayout.Label("NvimUnity HTTP Server", EditorStyles.boldLabel);*/
+            /*GUILayout.Label("Status: " + NvimUnityServer.GetStatus());*/
+            /*var address = GUILayout.TextField(NvimUnityServer.ServerAddress);*/
 
-            if (GUILayout.Button("Restart Server"))
-            {
-                NvimUnityServer.StopServer();
-                NvimUnityServer.ServerAddress = address;
-                NvimUnityServer.StartServer();
-            }
+            /*if (GUILayout.Button("Restart Server"))*/
+            /*{*/
+            /*    NvimUnityServer.StopServer();*/
+            /*    NvimUnityServer.ServerAddress = address;*/
+            /*    NvimUnityServer.StartServer();*/
+            /*}*/
         }
 
         public void Initialize(string editorInstallationPath)
         {
-            // Not required, Unity will call this on registration
+            // Not used by NvimUnity, but required by interface
         }
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = editorName, Path = Path.GetFullPath(Utils.NormalizePath(Utils.GetLauncherPath()))}
+            new CodeEditor.Installation { Name = editorName, Path = launcher }
         };
 
         public void SyncAll()
@@ -85,7 +81,7 @@ namespace NvimUnity
 
         public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
         {
-            // Optional: add logic to regenerate only if relevant
+            // Optional: can implement file-based filtering if needed
         }
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
@@ -93,8 +89,6 @@ namespace NvimUnity
             installation = new CodeEditor.Installation { Name = editorName, Path = launcher };
             return true;
         }
-
-        
     }
 }
 

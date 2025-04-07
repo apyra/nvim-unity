@@ -1,0 +1,9 @@
+{
+    "name": "apyra.nvim-unity",
+    "references": [],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
