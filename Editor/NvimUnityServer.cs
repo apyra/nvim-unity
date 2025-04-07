@@ -259,15 +259,15 @@ namespace NvimUnity
             {
                 try
                 {
-                    Debug.Log($"[NvimUnity] Trying terminal: {terminalCmd}");
+                    Debug.Log($"[NvimUnity] Trying terminal: {cmd}");
                     Process.Start(new ProcessStartInfo
                     {
 #if UNITY_EDITOR_WIN
                         FileName = "cmd.exe",
-                        Arguments = $"/c start \"\" {terminalCmd}",
+                        Arguments = $"/c start \"\" {cmd}",
 #else
                         FileName = "/bin/bash",
-                        Arguments = $"-c \"{terminalCmd} &\"",
+                        Arguments = $"-c \"{cmd} &\"",
 #endif
                         CreateNoWindow = true,
                         UseShellExecute = false
