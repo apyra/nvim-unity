@@ -1,14 +1,17 @@
 using UnityEditor;
 
-public static class NeovimMenu
+namespace NvimUnity
 {
-    [MenuItem("Assets/NvimUnity/Regenerate Project Files")]
-    public static void RegenerateProjectFiles()
+    public static class NeovimMenu
     {
-        AssetDatabase.Refresh();
-        SyncHelper.RegenerateProjectFiles();
-        UnityEngine.Debug.Log("Project files regenerated.");
-    }
+        [MenuItem("Assets/NvimUnity/Regenerate Project Files")]
+        public static void RegenerateProjectFiles()
+        {
+            AssetDatabase.Refresh();
+            Utils.RegenerateProjectFiles();
+            //UnityEngine.Debug.Log("Project files regenerated.");
+        }
     
+    }
 }
 

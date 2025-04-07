@@ -4,16 +4,20 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 ---
 
-## 📦 Features
+## Features
 
-- Open Unity C# scripts directly in Neovim  
-- Jump to exact line clicked in Unity  
-- Automatically regenerates project files via button  
-- Cross-platform launcher (Windows `.bat`, Linux/macOS `.sh`)
+- 🧠 Automatically open C# scripts in Neovim when clicked in Unity
+- 🖥️ Opens all files from the same Unity project in the **same terminal and buffer**
+- 🔄 Regenerate `.csproj` files via a Unity button or `:UnityRegenerate` command
+- 🔌 Unity package + Neovim plugin architecture
+- 🔥 Zero dependency on `nvr` (Neovim Remote)
+- 🖥️ Cross-platform support (Windows, Linux, macOS)
 
 ---
 
 ## 📂 Installation
+
+### Unity
 
 1. Install the Unity package from Git:
 
@@ -37,24 +41,53 @@ Once set up, when you double-click any `.cs` file in Unity, it will:
 - Launch Neovim  
 - Automatically regenerate `.csproj`, `.sln`, and `.vscode/` if missing
 
----
+### Neovim (Lua)
 
-## 🖥️ Terminal Configuration
-
-Recent updates allow configuring a custom terminal per OS using a `config.json` file. Make sure your `config.json` is set up for your system.
-
-**Example `config.json`:**
-
-```json
+Use your plugin manager to install:
+```lua
 {
-  "terminal": {
-    "windows": "wt",
-    "linux": "alacritty",
-    "mac": "iTerm.app"
-  },
-  "nvim_args": ""
+  'apyra/nvim-unity-handle',
+  config = function()
+    require("unity").setup()
+  end
 }
 ```
+
+### `config.json`
+A `config.json` file is already included at `Packages/com.apyra.nvim-unity/Launcher/config.json`.  
+You can edit it to match your preferred terminal for each OS:
+```json
+{
+  "terminals": {
+    "Windows": "wt",
+    "Linux": "gnome-terminal",
+    "OSX": "open -a Terminal"
+  }
+}
+```
+This tells the launcher which terminal to use per OS. You can use any terminal you want (e.g., `alacritty`, `kitty`, etc).
+
+---
+
+## Usage
+
+### Open Files from Unity
+- When you click a `.cs` file in Unity, it sends the path to the `NvimUnityServer` via HTTP.
+- The server ensures it opens in the correct Neovim instance/terminal.
+- All files from the same project share a terminal.
+
+### Regenerate Project Files
+- From Unity: `Preferences > External Tools > Regenerate Project Files`
+- From Assets Menu: `Assets > NvimUnity > Regenerate Project Files`
+- From Neovim: ([nvim-unity-handle]("https://github.com/apyra/nvim-unity-handle.git"))`:Uregenerate`
+
+---
+
+## How It Works
+
+- `nvim-open.bat/.sh` reads the `config.json` to determine which terminal to launch.
+- If a Neovim instance already exists for the Unity project, it reuses it.
+- `NvimUnityServer.cs` handles incoming HTTP `/open` and `/regenerate` commands.
 
 ---
 

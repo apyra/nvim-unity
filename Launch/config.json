@@ -1,9 +1,10 @@
 {
-  "terminal": {
-    "windows": "wt",
-    "linux": "alacritty",
-    "mac": "iTerm.app"
+  "terminals": {
+    "Windows": "wt",
+    "Linux": "gnome-terminal",
+    "OSX": "Terminal"
   },
-  "nvim_args": ""
+  "nvim_args": ["--listen", "nvim-unity"]
 }
+
 

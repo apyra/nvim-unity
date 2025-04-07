@@ -6,54 +6,56 @@ using System;
 using System.Reflection;
 using Debug = UnityEngine.Debug;
 
-public static class SyncHelper
+namespace NvimUnity
 {
-    public static void RegenerateProjectFiles()
+    public static class Utils
     {
-        var editorAssembly = typeof(UnityEditor.Editor).Assembly;
-        var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
-
-        if (syncVS != null)
+        public static void RegenerateProjectFiles()
         {
-            var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (syncMethod != null)
+            var editorAssembly = typeof(UnityEditor.Editor).Assembly;
+            var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
+
+            if (syncVS != null)
             {
-                syncMethod.Invoke(null, null);
-                UnityEditor.AssetDatabase.Refresh();
-                Debug.Log("Project files regenerated via reflection.");
-                CleanExtraCsprojFiles();
-            }
-            else
-            {
-                Debug.LogError("Failed to find SyncSolution method.");
+                var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+                if (syncMethod != null)
+                {
+                    syncMethod.Invoke(null, null);
+                    UnityEditor.AssetDatabase.Refresh();
+                    CleanExtraCsprojFiles();
+                }
             }
         }
-        else
+
+        private static void CleanExtraCsprojFiles()
         {
-            Debug.LogError("Failed to find UnityEditor.SyncVS class.");
-        }
+            string root = Directory.GetCurrentDirectory();
+            string[] allCsproj = Directory.GetFiles(root, "*.csproj", SearchOption.TopDirectoryOnly);
 
-    }
-
-    private static void CleanExtraCsprojFiles()
-    {
-        string root = Directory.GetCurrentDirectory();
-        string[] allCsproj = Directory.GetFiles(root, "*.csproj", SearchOption.TopDirectoryOnly);
-
-        var keep = new[]
-        {
-            "Assembly-CSharp.csproj",
-            $"{new DirectoryInfo(root).Name}.csproj"
-        };
-
-        foreach (string file in allCsproj)
-        {
-            if (!keep.Any(k => Path.GetFileName(file).Equals(k)))
+            var keep = new[]
             {
-                Debug.Log($"[NvimUnity] Deleting extra .csproj: {Path.GetFileName(file)}");
-                File.Delete(file);
+                "Assembly-CSharp.csproj",
+                $"{new DirectoryInfo(root).Name}.csproj"
+            };
+
+            foreach (string file in allCsproj)
+            {
+                if (!keep.Any(k => Path.GetFileName(file).Equals(k)))
+                {
+                    File.Delete(file);
+                }
             }
         }
+
+        private static string NormalizePath(string path)
+        {
+#if UNITY_EDITOR_WIN
+            return path.Replace("/", "\\");
+#else
+            return path.Replace("\\", "/");
+#endif
+        }
+
     }
 }
 

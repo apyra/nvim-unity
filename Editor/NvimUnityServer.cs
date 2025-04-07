@@ -1,79 +1,174 @@
+using System;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading;
 using UnityEditor;
 using UnityEngine;
+using System.Diagnostics;
 using Debug = UnityEngine.Debug;
+using System.Collections.Generic;
 
-[InitializeOnLoad]
-public static class NvimUnityServer
+namespace NvimUnity
 {
-    private static HttpListener _listener;
-    private static Thread _listenerThread;
-    private static bool _isRunning = false;
-
-    static NvimUnityServer()
+    [InitializeOnLoad]
+    public static class NvimUnityServer
     {
-        StartServer();
-    }
+        private static HttpListener _listener;
+        private static Thread _listenerThread;
+        private static bool _isRunning = false;
+        private static Dictionary<string, string> _terminalByOS = new();
 
-    public static void StartServer()
-    {
-        if (_isRunning) return;
-
-        _isRunning = true;
-        _listener = new HttpListener();
-        _listener.Prefixes.Add("http://localhost:5005/");
-
-        _listenerThread = new Thread(() =>
+        static NvimUnityServer()
         {
-            _listener.Start();
-            Debug.Log("[NvimUnity] HTTP Server started on http://localhost:5005");
+            LoadConfig();
+            StartServer();
+        }
 
-            while (_isRunning)
+        private static void LoadConfig()
+        {
+            string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+            string configPath = Path.GetFullPath(Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json"));
+
+            if (File.Exists(configPath))
             {
                 try
                 {
-                    var context = _listener.GetContext();
-                    HandleRequest(context);
+                    string json = File.ReadAllText(configPath);
+                    var parsed = JsonUtility.FromJson<Wrapper>(json);
+                    if (parsed.terminals != null)
+                        _terminalByOS = parsed.terminals;
                 }
-                catch { }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("[NvimUnity] Failed to parse config.json: " + e.Message);
+                }
             }
-        });
-
-        _listenerThread.Start();
-    }
-
-    private static void HandleRequest(HttpListenerContext context)
-    {
-        string path = context.Request.Url.AbsolutePath;
-        if (path == "/regenerate")
-        {
-            Debug.Log("[NvimUnity] Regenerate command received from Neovim.");
-            UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
-            UnityEditorInternal.InternalEditorUtility.RequestScriptReload();
-            RegenerateProjectFiles();
         }
 
-        string response = "OK";
-        byte[] buffer = Encoding.UTF8.GetBytes(response);
-        context.Response.ContentLength64 = buffer.Length;
-        context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-        context.Response.OutputStream.Close();
-    }
+        [Serializable]
+        private class Wrapper
+        {
+            public Dictionary<string, string> terminals;
+        }
 
-    private static void RegenerateProjectFiles()
-    {
-        // Igual ao botão da UI
-        SyncHelper.RegenerateProjectFiles();
-    }
+        public static void StartServer()
+        {
+            if (_isRunning) return;
 
-    public static void StopServer()
-    {
-        _isRunning = false;
-        _listener?.Stop();
-        _listenerThread?.Abort();
-        Debug.Log("[NvimUnity] HTTP Server stopped.");
+            _isRunning = true;
+            _listener = new HttpListener();
+            _listener.Prefixes.Add("http://localhost:5005/");
+
+            _listenerThread = new Thread(() =>
+            {
+                _listener.Start();
+
+                while (_isRunning)
+                {
+                    try
+                    {
+                        var context = _listener.GetContext();
+                        HandleRequest(context);
+                    }
+                    catch { }
+                }
+            });
+
+            _listenerThread.Start();
+        }
+
+        private static void HandleRequest(HttpListenerContext context)
+        {
+            string path = context.Request.Url.AbsolutePath;
+
+            if (path == "/regenerate")
+            {
+                UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
+                UnityEditorInternal.InternalEditorUtility.RequestScriptReload();
+                Utils.RegenerateProjectFiles();
+            }
+            else if (path == "/open")
+            {
+                using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
+                string filePath = reader.ReadToEnd().Trim();
+
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    TryOpenInNvim(filePath);
+                }
+            }
+
+            string response = "OK";
+            byte[] buffer = Encoding.UTF8.GetBytes(response);
+            context.Response.ContentLength64 = buffer.Length;
+            context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+            context.Response.OutputStream.Close();
+        }
+
+        private static void TryOpenInNvim(string filePath)
+        {
+            string fullPath = Path.GetFullPath(filePath);
+            string rootDir = Utils.FindProjectRoot(fullPath);
+            if (string.IsNullOrEmpty(rootDir)) return;
+
+            string socketPath = Path.Combine(rootDir, ".nvim_socket");
+
+            if (File.Exists(socketPath))
+            {
+                // Socket exists, connect via --server
+                RunDetachedTerminal(GetTerminalCommand($"{GetNvimCommand(socketPath, fullPath)}"));
+            }
+            else
+            {
+                // Socket doesn't exist, start new terminal with Neovim
+                RunDetachedTerminal(GetTerminalCommand($"{GetNvimListenCommand(socketPath, fullPath)}"));
+            }
+        }
+
+        private static string GetNvimCommand(string socket, string filePath)
+        {
+            return $"nvim --server \"{socket}\" --remote-tab \"{filePath}\"";
+        }
+
+        private static string GetNvimListenCommand(string socket, string filePath)
+        {
+            return $"nvim --listen \"{socket}\" \"{filePath}\"";
+        }
+
+        private static string GetTerminalCommand(string cmd)
+        {
+#if UNITY_EDITOR_WIN
+            return GetTerminalFor("Windows").Replace("{cmd}", cmd);
+#elif UNITY_EDITOR_OSX
+            return GetTerminalFor("OSX").Replace("{cmd}", cmd);
+#else
+            return GetTerminalFor("Linux").Replace("{cmd}", cmd);
+#endif
+        }
+
+        private static string GetTerminalFor(string os)
+        {
+            if (_terminalByOS.TryGetValue(os, out var template))
+            {
+                return template;
+            }
+
+#if UNITY_EDITOR_WIN
+            return $"wt -w 0 nt -d . cmd /k {{cmd}}";
+#elif UNITY_EDITOR_OSX
+            return $"osascript -e 'tell app \"Terminal\" to do script \"{{cmd}}\"'";
+#else
+            return $"x-terminal-emulator -e bash -c '{{cmd}}'";
+#endif
+        }
+
+        public static void StopServer()
+        {
+            _isRunning = false;
+            _listener?.Stop();
+            _listenerThread?.Abort();
+        }
     }
 }
 
