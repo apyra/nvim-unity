@@ -1,10 +1,9 @@
 {
   "terminals": {
-    "Windows": "wt",
-    "Linux": "gnome-terminal",
-    "OSX": "Terminal"
-  },
-  "nvim_args": ["--listen", "nvim-unity"]
+    "Windows": ["wt -w 0 nt -d . cmd /k {cmd}", "start cmd /k {cmd}"],
+    "Linux": ["gnome-terminal -- bash -c '{cmd}'", "x-terminal-emulator -e bash -c '{cmd}'"],
+    "OSX": ["osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'", "open -a Terminal \"{cmd}\""]
+  }
 }
 
 

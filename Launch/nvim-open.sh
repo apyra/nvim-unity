@@ -1,44 +1,14 @@
 #!/bin/bash
 
 FILE="$1"
-LINE="$2"
+LINE="${2:-1}"
 
-if [ -n "$LINE" ]; then
-  FILE_LINE="$FILE+$LINE"
+# Verifica se o servidor está rodando
+if curl --silent --fail --max-time 1 http://localhost:5005/status > /dev/null; then
+  # Envia requisição para o servidor
+  echo "$FILE:$LINE" | curl -X POST http://localhost:5005/open -H "Content-Type: text/plain" --data-binary @-
 else
-  FILE_LINE="$FILE"
+  echo "[nvim-open] Servidor não encontrado, abrindo diretamente com nvim..."
+  nvim "$FILE" +$LINE
 fi
-
-echo "$FILE_LINE" | curl -s -X POST http://localhost:5005/open --data-binary @-
-
-
-
-
-
-# #!/bin/bash
-#
-# FILE="$1"
-# LINE="$2"
-# DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# CONFIG_FILE="$DIR/config.json"
-# OS="$(uname -s)"
-# TERMINAL="x-terminal-emulator"
-#
-# # Detect platform
-# case "$OS" in
-#     Darwin)   PLATFORM="mac" ;;
-#     Linux)    PLATFORM="linux" ;;
-#     *)        PLATFORM="unknown" ;;
-# esac
-#
-# # Read config
-# if [ -f "$CONFIG_FILE" ]; then
-#     TERMINAL_FROM_CONFIG=$(jq -r ".terminal.$PLATFORM // empty" "$CONFIG_FILE")
-#     if [ -n "$TERMINAL_FROM_CONFIG" ]; then
-#         TERMINAL="$TERMINAL_FROM_CONFIG"
-#     fi
-# fi
-#
-# # Open
-# "$TERMINAL" -e nvim "$FILE" +$LINE
 

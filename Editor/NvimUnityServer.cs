@@ -1,3 +1,4 @@
+/ NvimUnityServer.cs
 using System;
 using System.IO;
 using System.Net;
@@ -8,6 +9,7 @@ using UnityEngine;
 using System.Diagnostics;
 using Debug = UnityEngine.Debug;
 using System.Collections.Generic;
+using System.Net.Http;
 
 namespace NvimUnity
 {
@@ -29,7 +31,7 @@ namespace NvimUnity
         private static void LoadConfig()
         {
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-            string configPath = Path.GetFullPath("Packages/com.apyra.nvim-unity/Launch/config.json");
+            string configPath = Path.GetFullPath(Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json"));
 
             Debug.Log("[NvimUnity] Loading config from: " + configPath);
 
@@ -58,6 +60,18 @@ namespace NvimUnity
         private class Wrapper
         {
             public Dictionary<string, string> terminals;
+        }
+
+        [Serializable]
+        private class ListWrapper
+        {
+            public List<string> templates;
+        }
+
+        [Serializable]
+        private class TerminalArrayWrapper
+        {
+            public List<string> templates;
         }
 
         public static void StartServer()
@@ -113,17 +127,25 @@ namespace NvimUnity
             else if (path == "/open")
             {
                 using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
-                string filePathWithLine = reader.ReadToEnd().Trim();
+                string payload = reader.ReadToEnd().Trim();
+                string[] parts = payload.Split(':');
 
-                if (!string.IsNullOrEmpty(filePathWithLine))
+                if (parts.Length >= 1)
                 {
-                    Debug.Log("[NvimUnity] Requested to open: " + filePathWithLine);
-                    TryOpenInNvim(filePathWithLine);
+                    string filePath = parts[0];
+                    int line = parts.Length >= 2 && int.TryParse(parts[1], out var l) ? l : 1;
+
+                    Debug.Log("[NvimUnity] Requested to open file: " + filePath + ":" + line);
+                    TryOpenInNvim(filePath, line);
                 }
                 else
                 {
-                    Debug.LogWarning("[NvimUnity] Received empty path");
+                    Debug.LogWarning("[NvimUnity] Received malformed open request");
                 }
+            }
+            else if (path == "/status")
+            {
+                Debug.Log("[NvimUnity] Status check received");
             }
 
 
@@ -134,104 +156,134 @@ namespace NvimUnity
             context.Response.OutputStream.Close();
         }
 
-        private static void TryOpenInNvim(string filePathWithLine)
+        public static void TryOpenInNvim(string filePath, int line)
         {
-            string[] parts = filePathWithLine.Split('+');
-            string fullPath = Path.GetFullPath(parts[0]);
-            string lineArg = parts.Length > 1 ? "+" + parts[1] : "";
-
-            Debug.Log("[NvimUnity] Full path: " + fullPath);
-            if (!string.IsNullOrEmpty(lineArg)) Debug.Log("[NvimUnity] Line arg: " + lineArg);
-
+            string fullPath = Path.GetFullPath(filePath);
             string rootDir = Utils.FindProjectRoot(fullPath);
+
             if (string.IsNullOrEmpty(rootDir))
             {
                 Debug.LogWarning("[NvimUnity] Could not determine project root for: " + fullPath);
+                TryOpenStandalone(fullPath, line);
                 return;
             }
 
             string socketPath = Path.Combine(rootDir, ".nvim_socket");
             Debug.Log("[NvimUnity] Socket path: " + socketPath);
 
-            if (File.Exists(socketPath))
+            string cmd = File.Exists(socketPath)
+                ? GetNvimCommand(socketPath, fullPath, line)
+                : GetNvimListenCommand(socketPath, fullPath, line);
+
+            RunDetachedTerminalFallbacks(cmd);
+        }
+
+        public static bool TryOpenStandalone(string filePath, int line)
+        {
+            string cmd = $"nvim \"{filePath}\" +{line}";
+            try
             {
-                Debug.Log("[NvimUnity] Reusing existing Neovim instance");
-                RunDetachedTerminal(GetTerminalCommand($"{GetNvimCommand(socketPath, fullPath)} {lineArg}"));
+                RunDetachedTerminalFallbacks(cmd);
+                return true;
             }
-            else
+            catch (Exception ex)
             {
-                Debug.Log("[NvimUnity] Launching new Neovim instance");
-                RunDetachedTerminal(GetTerminalCommand($"{GetNvimListenCommand(socketPath, fullPath)} {lineArg}"));
+                Debug.LogError("[NvimUnity] Fallback failed: " + ex.Message);
+                return false;
             }
         }
 
-
-        private static string GetNvimCommand(string socket, string filePath)
+        private static string GetNvimCommand(string socket, string filePath, int line)
         {
-            return $"nvim --server \"{socket}\" --remote-tab \"{filePath}\"";
+            return $"nvim --server \"{socket}\" --remote-tab +{line} \"{filePath}\"";
         }
 
-        private static string GetNvimListenCommand(string socket, string filePath)
+        private static string GetNvimListenCommand(string socket, string filePath, int line)
         {
-            return $"nvim --listen \"{socket}\" \"{filePath}\"";
+            return $"nvim --listen \"{socket}\" +{line} \"{filePath}\"";
         }
 
-        private static string GetTerminalCommand(string cmd)
+        private static void RunDetachedTerminalFallbacks(string cmd)
         {
+            string os = GetCurrentOS();
+            List<string> fallbackTerminals = GetTerminalsForOS(os, cmd);
+
+            foreach (string terminalCmd in fallbackTerminals)
+            {
+                try
+                {
+                    Debug.Log($"[NvimUnity] Trying terminal: {terminalCmd}");
+                    Process.Start(new ProcessStartInfo
+                    {
 #if UNITY_EDITOR_WIN
-            return GetTerminalFor("Windows").Replace("{cmd}", cmd);
-#elif UNITY_EDITOR_OSX
-            return GetTerminalFor("OSX").Replace("{cmd}", cmd);
+                        FileName = "cmd.exe",
+                        Arguments = $"/c start \"\" {terminalCmd}",
 #else
-            return GetTerminalFor("Linux").Replace("{cmd}", cmd);
+                        FileName = "/bin/bash",
+                        Arguments = $"-c \"{terminalCmd} &\"",
 #endif
-        }
-
-        private static string GetTerminalFor(string os)
-        {
-            if (_terminalByOS.TryGetValue(os, out var template))
-            {
-                return template;
+                        CreateNoWindow = true,
+                        UseShellExecute = false
+                    });
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogWarning($"[NvimUnity] Failed to launch terminal: {terminalCmd}, Error: {ex.Message}");
+                }
             }
 
-#if UNITY_EDITOR_WIN
-            return $"wt -w 0 nt -d . cmd /k {{cmd}}";
-#elif UNITY_EDITOR_OSX
-            return $"osascript -e 'tell app \"Terminal\" to do script \"{{cmd}}\"'";
-#else
-            return $"x-terminal-emulator -e bash -c '{{cmd}}'";
-#endif
+            throw new Exception("[NvimUnity] All terminal attempts failed.");
         }
 
-        private static Process RunDetachedTerminal(string command)
+        private static List<string> GetTerminalsForOS(string os, string cmd)
+        {
+            List<string> terminals = new();
+
+            if (_terminalByOS.TryGetValue(os, out var raw))
+            {
+                if (raw.TrimStart().StartsWith("["))
+                {
+                    try
+                    {
+                        var wrapper = new TerminalArrayWrapper();
+                        wrapper.templates = JsonUtility.FromJson<ListWrapper>("{\"templates\":" + raw + "}").templates;
+                        foreach (var tmpl in wrapper.templates)
+                            terminals.Add(tmpl.Replace("{cmd}", cmd));
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogWarning($"[NvimUnity] Failed to parse array of terminals for {os}: {e.Message}");
+                    }
+                }
+                else
+                {
+                    terminals.Add(raw.Replace("{cmd}", cmd));
+                }
+            }
+
+            if (terminals.Count == 0)
+            {
+#if UNITY_EDITOR_WIN
+                terminals.Add($"wt -w 0 nt -d . cmd /k {cmd}");
+#elif UNITY_EDITOR_OSX
+                terminals.Add($"osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'");
+#else
+                terminals.Add($"x-terminal-emulator -e bash -c '{cmd}'");
+#endif
+            }
+
+            return terminals;
+        }
+
+        private static string GetCurrentOS()
         {
 #if UNITY_EDITOR_WIN
-            Debug.Log("[NvimUnity] Launching detached terminal (Windows): " + command);
-            return Process.Start(new ProcessStartInfo
-            {
-                FileName = "cmd.exe",
-                Arguments = $"/c start \"\" {command}",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
+            return "Windows";
 #elif UNITY_EDITOR_OSX
-            Debug.Log("[NvimUnity] Launching detached terminal (macOS): " + command);
-            return Process.Start(new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command} &\"",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
-#else // Linux
-            Debug.Log("[NvimUnity] Launching detached terminal (Linux): " + command);
-            return Process.Start(new ProcessStartInfo
-            {
-                FileName = "/bin/bash",
-                Arguments = $"-c \"{command} &\"",
-                CreateNoWindow = true,
-                UseShellExecute = false
-            });
+            return "OSX";
+#else
+            return "Linux";
 #endif
         }
 
