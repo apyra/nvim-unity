@@ -42,7 +42,7 @@ namespace NvimUnity
 
         private static void InitOnce()
         {
-            EnsureLauncherExecutable();
+            Utils.EnsureLauncherExecutable();
 
             if (_initialized) return;
             _initialized = true;
