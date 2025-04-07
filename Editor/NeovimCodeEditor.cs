@@ -61,9 +61,8 @@ public class NeovimCodeEditor : IExternalCodeEditor
 
         try
         {
-            var psi = new ProcessStartInfo
-            {
-                #if UNITY_EDITOR_WIN
+
+#if UNITY_EDITOR_WIN
             var psi = new ProcessStartInfo
             {
                 FileName = "cmd.exe",
