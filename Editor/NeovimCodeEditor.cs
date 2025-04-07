@@ -13,6 +13,7 @@ namespace NvimUnity
     public class NeovimCodeEditor : IExternalCodeEditor
     {
         private static readonly string editorName = "Neovim (NvimUnity)";
+        private static readonly string launcher = Path.GetFullPath(Utils.NormalizePath(Utils.GetLauncherPath()));
 
         static NeovimCodeEditor()
         {
@@ -73,7 +74,7 @@ namespace NvimUnity
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = editorName, Path = launcher }
+            new CodeEditor.Installation { Name = editorName, Path = Path.GetFullPath(Utils.NormalizePath(Utils.GetLauncherPath()))}
         };
 
         public void SyncAll()

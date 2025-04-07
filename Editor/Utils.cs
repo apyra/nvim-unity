@@ -60,6 +60,36 @@ namespace NvimUnity
 #endif
         }
 
+        public static void EnsureLauncherExecutable()
+        {
+#if !UNITY_EDITOR_WIN
+            try
+            {
+                string path = GetLauncherPath();
+                if (File.Exists(path))
+                {
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = "/bin/chmod",
+                        Arguments = $"+x \"{path}\"",
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
+            }
+#endif
+        }
+
+        public static string BuildLauncherCommand(string filePath, int line, string serverAddress)
+        {
+            string launcherPath = Path.GetFullPath(NormalizePath(GetLauncherPath()));
+            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
+        }
+
         public static List<string> GetTerminalsForOS(Dictionary<string, string> terminalByOS, string os, string cmd)
         {
             List<string> terminals = new();
@@ -98,6 +128,17 @@ namespace NvimUnity
             }
 
             return terminals;
+        }
+
+        public static string GetCurrentOS()
+        {
+#if UNITY_EDITOR_WIN
+            return "Windows";
+#elif UNITY_EDITOR_OSX
+            return "OSX";
+#else
+            return "Linux";
+#endif
         }
 
         [Serializable]

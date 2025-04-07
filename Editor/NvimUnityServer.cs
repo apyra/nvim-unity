@@ -230,13 +230,13 @@ namespace NvimUnity
                 return;
             }
 
-            string launcherCmd = BuildLauncherCommand(fullPath, line);
+            string launcherCmd = Utils.BuildLauncherCommand(fullPath, line, ServerAddress);
             RunDetachedTerminalFallbacks(launcherCmd);
         }
 
         public static bool TryOpenStandalone(string filePath, int line)
         {
-            string launcherCmd = BuildLauncherCommand(filePath, line);
+            string launcherCmd = Utils.BuildLauncherCommand(filePath, line, ServerAddress);
 
             try
             {
@@ -250,41 +250,9 @@ namespace NvimUnity
             }
         }
 
-        // --- Helpers ---
-        
-        private static void EnsureLauncherExecutable()
-        {
-#if !UNITY_EDITOR_WIN
-            try
-            {
-                string path = GetLauncherPath();
-                if (File.Exists(path))
-                {
-                    Process.Start(new ProcessStartInfo
-                    {
-                        FileName = "/bin/chmod",
-                        Arguments = $"+x \"{path}\"",
-                        UseShellExecute = false,
-                        CreateNoWindow = true
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
-            }
-#endif
-        }
-
-        private static string BuildLauncherCommand(string filePath, int line)
-        {
-            string launcherPath = Path.GetFullPath(Utils.NormalizePath(Utils.GetLauncherPath()));
-            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
-        }
-
         private static void RunDetachedTerminalFallbacks(string cmd)
         {
-            string os = GetCurrentOS();
+            string os = Utils.GetCurrentOS();
             List<string> fallbackTerminals = Utils.GetTerminalsForOS(_terminalByOS, os, cmd);
 
             foreach (string terminalCmd in fallbackTerminals)
@@ -313,17 +281,6 @@ namespace NvimUnity
             }
 
             throw new Exception("[NvimUnity] All terminal fallback attempts failed.");
-        }
-
-        private static string GetCurrentOS()
-        {
-#if UNITY_EDITOR_WIN
-            return "Windows";
-#elif UNITY_EDITOR_OSX
-            return "OSX";
-#else
-            return "Linux";
-#endif
         }
     }
 }
