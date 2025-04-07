@@ -6,9 +6,10 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 ## 📦 Features
 
-- Open `.cs` files directly in Neovim from Unity
-- Adds a menu item to regenerate `.csproj` files (just like VSCode)
-- Installable via Unity Package Manager
+- Open Unity C# scripts directly in Neovim  
+- Jump to exact line clicked in Unity  
+- Automatically regenerates project files via button  
+- Cross-platform launcher (Windows `.bat`, Linux/macOS `.sh`)
 
 ---
 
@@ -31,60 +32,29 @@ Packages/nvim-unity
 - Go to `Edit > Preferences > External Tools`
 - Select **Neovim (Unity)** (no need to browse for `.exe`)
 
-3. On Linux/macOS, ensure the shell script is executable:
-
-```bash
-chmod +x Packages/nvim-unity/bin/nvim-open.sh
-```
-
 Once set up, when you double-click any `.cs` file in Unity, it will:
 
-- Launch Neovim
+- Launch Neovim  
 - Automatically regenerate `.csproj`, `.sln`, and `.vscode/` if missing
 
 ---
 
-## 🔗 Requirements
+## 🖥️ Terminal Configuration
 
-To allow Unity to open `.cs` files directly into a running Neovim instance, make sure you have [`neovim-remote`](https://github.com/mhinz/neovim-remote) installed:
+Recent updates allow configuring a custom terminal per OS using a `config.json` file. Make sure your `config.json` is set up for your system.
 
-### 💻 Windows
+**Example `config.json`:**
 
-```powershell
-# If you don't have Python:
-choco install python -y
-
-# Then install nvr:
-pip install neovim-remote
+```json
+{
+  "terminal": {
+    "windows": "wt",
+    "linux": "alacritty",
+    "mac": "iTerm.app"
+  },
+  "nvim_args": ""
+}
 ```
-
-Make sure `nvr` is available in your PATH. It is usually installed at:
-
-```
-C:\Users\YOUR_NAME\AppData\Roaming\Python\Python<version>\Scripts
-```
-
-### 🐧 Linux / 🍎 macOS
-
-```bash
-pip install neovim-remote
-```
-
-Or via your package manager:
-
-```bash
-# Debian/Ubuntu
-sudo apt install python3-pip
-pip3 install neovim-remote
-```
-
-```bash
-# macOS (Homebrew)
-brew install python
-pip3 install neovim-remote
-```
-
-Once installed, Unity will send `.cs` files to your running Neovim instance via `nvr`.
 
 ---
 
@@ -92,13 +62,13 @@ Once installed, Unity will send `.cs` files to your running Neovim instance via 
 
 This works best with:
 
-- [Neovim](https://neovim.io/) * required
+- [Neovim](https://neovim.io/) *(required)*
 - [NvChad](https://nvchad.com/) as your Neovim base, with:
-  - LSP
-  - Lazy.nvim
-  - Mason.nvim
-  - Telescope
-  - GitSigns
+  - LSP  
+  - Lazy.nvim  
+  - Mason.nvim  
+  - Telescope  
+  - GitSigns  
   - Tabs for multi-file editing
 
 ---
@@ -174,6 +144,19 @@ end, { desc = "Copilot Accept", noremap = true, silent = true })
 
 ---
 
+### 🧬 Vim Fugitive for Git (Optional)
+
+```lua
+use {
+  'tpope/vim-fugitive',
+  config = function()
+    -- Optional config
+  end
+}
+```
+
+---
+
 ### ⚙️ Editor Options (Optional)
 
 ```lua
@@ -204,11 +187,13 @@ Use [LuaSnip](https://github.com/L3MON4D3/LuaSnip) to insert Unity C# boilerplat
 ### ✍️ Snippet Setup
 
 **Linux/macOS:**
+
 ```
 ~/.config/nvim/lua/snippets/cs.lua
 ```
 
 **Windows:**
+
 ```
 C:/Users/YOUR_USERNAME/AppData/Local/nvim/lua/snippets/cs.lua
 ```
@@ -216,11 +201,13 @@ C:/Users/YOUR_USERNAME/AppData/Local/nvim/lua/snippets/cs.lua
 ### 🔌 Load Snippets
 
 **Linux/macOS:**
+
 ```lua
 require("luasnip.loaders.from_lua").load({ paths = "~/.config/nvim/lua/snippets" })
 ```
 
 **Windows:**
+
 ```lua
 require("luasnip.loaders.from_lua").lazy_load({
   paths = vim.fn.stdpath("config") .. "/lua/snippets"
@@ -272,3 +259,4 @@ PRs, issues, ideas welcome! This project is evolving – help shape it 🚀
 
 ## 📄 License
 
+MIT

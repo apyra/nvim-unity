@@ -1,13 +1,20 @@
 @echo off
+setlocal
+
 set FILE=%1
 set LINE=%2
+set DIR=%~dp0
+set CONFIG=%DIR%config.json
 
-:: Prefer nvr if available
-where nvr >nul 2>nul
-if %errorlevel%==0 (
-    nvr --remote-tab "%FILE%" %LINE%
-) else (
-    start "" nvim "%FILE%" %LINE%
-)
+:: Default terminal
+set TERMINAL=wt
 
+:: Try to get terminal from config.json
+for /f "delims=" %%t in ('powershell -NoProfile -Command ^
+    "if (Test-Path '%CONFIG%') { ^
+        (Get-Content '%CONFIG%' | ConvertFrom-Json).terminal.windows ^
+     }"') do set TERMINAL=%%t
+
+:: Launch
+%TERMINAL% nvim "%FILE%" +%LINE%
 

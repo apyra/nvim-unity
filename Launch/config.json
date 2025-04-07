@@ -1,0 +1,9 @@
+{
+  "terminal": {
+    "windows": "wt",
+    "linux": "alacritty",
+    "mac": "iTerm.app"
+  },
+  "nvim_args": ""
+}
+
