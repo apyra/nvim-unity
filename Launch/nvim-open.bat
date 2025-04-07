@@ -5,21 +5,16 @@ setlocal EnableDelayedExpansion
 set "FILE=%~1"
 set "LINE=%~2"
 
-:: Caminho absoluto do diretório do script
-set "SCRIPT_DIR=%~dp0"
-set "CONFIG_FILE=%SCRIPT_DIR%config.json"
-
-:: Valor padrão
-set "TERMINAL=wt"
-
-:: Lê o terminal do config.json
-for /f "delims=" %%i in ('powershell -NoProfile -Command ^
-  "if (Test-Path '%CONFIG_FILE%') { (Get-Content '%CONFIG_FILE%' -Raw | ConvertFrom-Json).terminals.Windows } else { '' }"') do (
-    set "TERMINAL=%%i"
+:: Monta o caminho com linha (se houver)
+if defined LINE (
+    set "FILE_LINE=%FILE%+%LINE%"
+) else (
+    set "FILE_LINE=%FILE%"
 )
 
-:: Executa o comando
-%TERMINAL% new-tab nvim --listen nvim-unity -- "%FILE%" +%LINE%
+:: Envia requisição HTTP para o servidor local
+echo !FILE_LINE! | curl -s -X POST http://localhost:5005/open --data-binary @-
+
 
 
 

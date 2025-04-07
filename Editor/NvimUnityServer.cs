@@ -113,18 +113,19 @@ namespace NvimUnity
             else if (path == "/open")
             {
                 using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
-                string filePath = reader.ReadToEnd().Trim();
+                string filePathWithLine = reader.ReadToEnd().Trim();
 
-                if (!string.IsNullOrEmpty(filePath))
+                if (!string.IsNullOrEmpty(filePathWithLine))
                 {
-                    Debug.Log("[NvimUnity] Requested to open file: " + filePath);
-                    TryOpenInNvim(filePath);
+                    Debug.Log("[NvimUnity] Requested to open: " + filePathWithLine);
+                    TryOpenInNvim(filePathWithLine);
                 }
                 else
                 {
-                    Debug.LogWarning("[NvimUnity] Received empty file path");
+                    Debug.LogWarning("[NvimUnity] Received empty path");
                 }
             }
+
 
             string response = "OK";
             byte[] buffer = Encoding.UTF8.GetBytes(response);
@@ -133,11 +134,16 @@ namespace NvimUnity
             context.Response.OutputStream.Close();
         }
 
-        private static void TryOpenInNvim(string filePath)
+        private static void TryOpenInNvim(string filePathWithLine)
         {
-            string fullPath = Path.GetFullPath(filePath);
-            string rootDir = Utils.FindProjectRoot(fullPath);
+            string[] parts = filePathWithLine.Split('+');
+            string fullPath = Path.GetFullPath(parts[0]);
+            string lineArg = parts.Length > 1 ? "+" + parts[1] : "";
 
+            Debug.Log("[NvimUnity] Full path: " + fullPath);
+            if (!string.IsNullOrEmpty(lineArg)) Debug.Log("[NvimUnity] Line arg: " + lineArg);
+
+            string rootDir = Utils.FindProjectRoot(fullPath);
             if (string.IsNullOrEmpty(rootDir))
             {
                 Debug.LogWarning("[NvimUnity] Could not determine project root for: " + fullPath);
@@ -150,14 +156,15 @@ namespace NvimUnity
             if (File.Exists(socketPath))
             {
                 Debug.Log("[NvimUnity] Reusing existing Neovim instance");
-                RunDetachedTerminal(GetTerminalCommand($"{GetNvimCommand(socketPath, fullPath)}"));
+                RunDetachedTerminal(GetTerminalCommand($"{GetNvimCommand(socketPath, fullPath)} {lineArg}"));
             }
             else
             {
                 Debug.Log("[NvimUnity] Launching new Neovim instance");
-                RunDetachedTerminal(GetTerminalCommand($"{GetNvimListenCommand(socketPath, fullPath)}"));
+                RunDetachedTerminal(GetTerminalCommand($"{GetNvimListenCommand(socketPath, fullPath)} {lineArg}"));
             }
         }
+
 
         private static string GetNvimCommand(string socket, string filePath)
         {

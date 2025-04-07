@@ -3,26 +3,14 @@
 FILE="$1"
 LINE="$2"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/config.json"
-TERMINAL="gnome-terminal"
-
-if [ -f "$CONFIG_FILE" ]; then
-  OS="$(uname)"
-  case "$OS" in
-    Darwin) OS_KEY="OSX" ;;
-    Linux) OS_KEY="Linux" ;;
-    *) OS_KEY="Unknown" ;;
-  esac
-
-  TERMINAL=$(jq -r ".terminals[\"$OS_KEY\"]" "$CONFIG_FILE" 2>/dev/null)
-  if [ "$TERMINAL" == "null" ] || [ -z "$TERMINAL" ]; then
-    TERMINAL="gnome-terminal"
-  fi
+if [ -n "$LINE" ]; then
+  FILE_LINE="$FILE+$LINE"
+else
+  FILE_LINE="$FILE"
 fi
 
-# Executa no terminal
-$TERMINAL -- bash -c "nvim --listen nvim-unity \"$FILE\" +$LINE"
+echo "$FILE_LINE" | curl -s -X POST http://localhost:5005/open --data-binary @-
+
 
 
 
