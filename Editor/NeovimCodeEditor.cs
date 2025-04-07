@@ -16,21 +16,34 @@ namespace NvimUnity
 
         static NeovimCodeEditor()
         {
+            Debug.Log("[NvimUnity] Registering NeovimCodeEditor...");
             CodeEditor.Register(new NeovimCodeEditor());
             EnsureLauncherExecutable();
         }
 
-        public string GetDisplayName() => editorName;
+        public string GetDisplayName()
+        {
+            Debug.Log("[NvimUnity] GetDisplayName called");
+            return editorName;
+        }
 
         public bool OpenProject(string path, int line, int column)
         {
+            Debug.Log($"[NvimUnity] OpenProject called with path: {path}, line: {line}, column: {column}");
             if (string.IsNullOrEmpty(path)) return false;
             return OpenFileAtLine(path, line);
         }
 
         public bool OpenFileAtLine(string filePath, int line)
         {
-            if (!IsNvimUnityDefaultEditor()) return false;
+            Debug.Log($"[NvimUnity] OpenFileAtLine called with filePath: {filePath}, line: {line}");
+
+            if (!IsNvimUnityDefaultEditor())
+            {
+                Debug.LogWarning("[NvimUnity] Not default editor, aborting");
+                return false;
+            }
+
             if (string.IsNullOrEmpty(filePath)) return false;
             if (line < 1) line = 1;
 
@@ -38,7 +51,11 @@ namespace NvimUnity
             string quotedFile = $"\"{fullPath}\"";
             string lineArg = $"+{line}";
 
-            if (!File.Exists(launcher)) return false;
+            if (!File.Exists(launcher))
+            {
+                Debug.LogWarning("[NvimUnity] Launcher not found at path: " + launcher);
+                return false;
+            }
 
             try
             {
@@ -57,10 +74,15 @@ namespace NvimUnity
                     CreateNoWindow = true
                 };
 
+                Debug.Log("[NvimUnity] Starting process: " + psi.FileName + " " + psi.Arguments);
                 Process.Start(psi);
                 return true;
             }
-            catch (Exception) { return false; }
+            catch (Exception ex)
+            {
+                Debug.LogError("[NvimUnity] Failed to start launcher: " + ex.Message);
+                return false;
+            }
         }
 
         private static void EnsureLauncherExecutable()
@@ -69,6 +91,7 @@ namespace NvimUnity
             try
             {
                 string path = GetLauncherPath();
+                Debug.Log("[NvimUnity] Ensuring launcher is executable: " + path);
                 if (File.Exists(path))
                 {
                     Process.Start(new ProcessStartInfo
@@ -80,7 +103,10 @@ namespace NvimUnity
                     });
                 }
             }
-            catch (Exception) { }
+            catch (Exception e)
+            {
+                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
+            }
 #endif
         }
 
@@ -88,6 +114,8 @@ namespace NvimUnity
         {
             string defaultApp = Utils.NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
             string expectedPath = Utils.NormalizePath(GetLauncherPath());
+            Debug.Log($"[NvimUnity] Checking default editor: {defaultApp} vs expected {expectedPath}");
+
             return defaultApp.Contains("nvim-unity") || defaultApp.Equals(expectedPath, StringComparison.OrdinalIgnoreCase);
         }
 
@@ -97,11 +125,15 @@ namespace NvimUnity
             rect.width = 252;
             if (GUI.Button(rect, "Regenerate project files"))
             {
+                Debug.Log("[NvimUnity] Regenerate button clicked");
                 Utils.RegenerateProjectFiles();
             }
         }
 
-        public void Initialize(string editorInstallationPath) { }
+        public void Initialize(string editorInstallationPath)
+        {
+            Debug.Log("[NvimUnity] Initialize called with: " + editorInstallationPath);
+        }
 
         public CodeEditor.Installation[] Installations => new[]
         {
@@ -110,14 +142,19 @@ namespace NvimUnity
 
         public void SyncAll()
         {
+            Debug.Log("[NvimUnity] SyncAll called");
             AssetDatabase.Refresh();
             Utils.RegenerateProjectFiles();
         }
 
-        public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles) {}
+        public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
+        {
+            Debug.Log("[NvimUnity] SyncIfNeeded called (currently noop)");
+        }
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
+            Debug.Log("[NvimUnity] TryGetInstallationForPath called with: " + editorPath);
             installation = new CodeEditor.Installation { Name = editorName, Path = launcher };
             return true;
         }
@@ -135,3 +172,4 @@ namespace NvimUnity
         }
     }
 }
+

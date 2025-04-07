@@ -21,6 +21,7 @@ namespace NvimUnity
 
         static NvimUnityServer()
         {
+            Debug.Log("[NvimUnity] Initializing server...");
             LoadConfig();
             StartServer();
         }
@@ -30,6 +31,8 @@ namespace NvimUnity
             string projectRoot = Directory.GetParent(Application.dataPath).FullName;
             string configPath = Path.GetFullPath(Path.Combine(projectRoot, "Packages/com.apyra.nvim-unity/Launcher/config.json"));
 
+            Debug.Log("[NvimUnity] Loading config from: " + configPath);
+
             if (File.Exists(configPath))
             {
                 try
@@ -38,11 +41,16 @@ namespace NvimUnity
                     var parsed = JsonUtility.FromJson<Wrapper>(json);
                     if (parsed.terminals != null)
                         _terminalByOS = parsed.terminals;
+                    Debug.Log("[NvimUnity] Loaded terminal configuration");
                 }
                 catch (Exception e)
                 {
                     Debug.LogWarning("[NvimUnity] Failed to parse config.json: " + e.Message);
                 }
+            }
+            else
+            {
+                Debug.LogWarning("[NvimUnity] Config file not found");
             }
         }
 
@@ -62,7 +70,16 @@ namespace NvimUnity
 
             _listenerThread = new Thread(() =>
             {
-                _listener.Start();
+                try
+                {
+                    _listener.Start();
+                    Debug.Log("[NvimUnity] HTTP Server started on port 5005");
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("[NvimUnity] Failed to start HTTP Server: " + e.Message);
+                    return;
+                }
 
                 while (_isRunning)
                 {
@@ -71,7 +88,10 @@ namespace NvimUnity
                         var context = _listener.GetContext();
                         HandleRequest(context);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning("[NvimUnity] Exception in listener thread: " + ex.Message);
+                    }
                 }
             });
 
@@ -81,12 +101,14 @@ namespace NvimUnity
         private static void HandleRequest(HttpListenerContext context)
         {
             string path = context.Request.Url.AbsolutePath;
+            Debug.Log("[NvimUnity] Incoming request: " + path);
 
             if (path == "/regenerate")
             {
                 UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
                 UnityEditorInternal.InternalEditorUtility.RequestScriptReload();
                 Utils.RegenerateProjectFiles();
+                Debug.Log("[NvimUnity] Regeneration triggered");
             }
             else if (path == "/open")
             {
@@ -95,7 +117,12 @@ namespace NvimUnity
 
                 if (!string.IsNullOrEmpty(filePath))
                 {
+                    Debug.Log("[NvimUnity] Requested to open file: " + filePath);
                     TryOpenInNvim(filePath);
+                }
+                else
+                {
+                    Debug.LogWarning("[NvimUnity] Received empty file path");
                 }
             }
 
@@ -110,18 +137,24 @@ namespace NvimUnity
         {
             string fullPath = Path.GetFullPath(filePath);
             string rootDir = Utils.FindProjectRoot(fullPath);
-            if (string.IsNullOrEmpty(rootDir)) return;
+
+            if (string.IsNullOrEmpty(rootDir))
+            {
+                Debug.LogWarning("[NvimUnity] Could not determine project root for: " + fullPath);
+                return;
+            }
 
             string socketPath = Path.Combine(rootDir, ".nvim_socket");
+            Debug.Log("[NvimUnity] Socket path: " + socketPath);
 
             if (File.Exists(socketPath))
             {
-                // Socket exists, connect via --server
+                Debug.Log("[NvimUnity] Reusing existing Neovim instance");
                 RunDetachedTerminal(GetTerminalCommand($"{GetNvimCommand(socketPath, fullPath)}"));
             }
             else
             {
-                // Socket doesn't exist, start new terminal with Neovim
+                Debug.Log("[NvimUnity] Launching new Neovim instance");
                 RunDetachedTerminal(GetTerminalCommand($"{GetNvimListenCommand(socketPath, fullPath)}"));
             }
         }
@@ -166,6 +199,7 @@ namespace NvimUnity
         private static Process RunDetachedTerminal(string command)
         {
 #if UNITY_EDITOR_WIN
+            Debug.Log("[NvimUnity] Launching detached terminal (Windows): " + command);
             return Process.Start(new ProcessStartInfo
             {
                 FileName = "cmd.exe",
@@ -174,6 +208,7 @@ namespace NvimUnity
                 UseShellExecute = false
             });
 #elif UNITY_EDITOR_OSX
+            Debug.Log("[NvimUnity] Launching detached terminal (macOS): " + command);
             return Process.Start(new ProcessStartInfo
             {
                 FileName = "/bin/bash",
@@ -182,6 +217,7 @@ namespace NvimUnity
                 UseShellExecute = false
             });
 #else // Linux
+            Debug.Log("[NvimUnity] Launching detached terminal (Linux): " + command);
             return Process.Start(new ProcessStartInfo
             {
                 FileName = "/bin/bash",
@@ -192,9 +228,9 @@ namespace NvimUnity
 #endif
         }
 
-
         public static void StopServer()
         {
+            Debug.Log("[NvimUnity] Stopping server...");
             _isRunning = false;
             _listener?.Stop();
             _listenerThread?.Abort();
