@@ -10,7 +10,7 @@ using Debug = UnityEngine.Debug;
 public class NeovimCodeEditor : IExternalCodeEditor
 {
     private static readonly string editorName = "Neovim (NvimUnity)";
-    private static readonly string launcher = NormalizePath(GetLauncherPath());
+    private static readonly string launcher = Path.GetFullPath(NormalizePath(GetLauncherPath()));
 
     static NeovimCodeEditor()
     {
@@ -63,15 +63,21 @@ public class NeovimCodeEditor : IExternalCodeEditor
         {
             var psi = new ProcessStartInfo
             {
-#if UNITY_EDITOR_WIN
-                FileName = Path.GetFullPath(launcher),
-                Arguments = $"\"{fullPath}\" {lineArg}",
+                #if UNITY_EDITOR_WIN
+            var psi = new ProcessStartInfo
+            {
+                FileName = "cmd.exe",
+                Arguments = $"/c \"\"{launcher}\" {quotedFile} {lineArg}\"",
 #else
-                FileName = "/bin/bash",
-                Arguments = $"\"{launcher}\" \"{fullPath}\" {lineArg}",
+            var psi = new ProcessStartInfo
+            {
+                FileName = launcher,
+                Arguments = $"{quotedFile} {lineArg}",
 #endif
-                UseShellExecute = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
             };
+
 
             Process.Start(psi);
             return true;
