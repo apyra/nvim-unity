@@ -1,17 +1,23 @@
 @echo off
-@echo off
 setlocal
+
+:: Args: file, line, server address
 set FILE=%1
 set LINE=%2
+set SERVER=%3
 
-:: Verifica se o servidor está rodando
-powershell -Command "try { (Invoke-WebRequest -UseBasicParsing -Uri http://localhost:5005/status -TimeoutSec 1) | Out-Null; exit 0 } catch { exit 1 }"
-if %errorlevel% neq 0 (
+:: Testa se o servidor está online
+curl -s --max-time 1 %SERVER%status >nul
+if errorlevel 1 (
     echo [nvim-open] Servidor não encontrado, abrindo diretamente...
     start "" nvim "%FILE%" +%LINE%
     exit /b
 )
 
-:: Envia requisição para o servidor
-echo %FILE%:%LINE% | curl -X POST http://localhost:5005/open -H "Content-Type: text/plain" --data-binary @-
+:: Envia requisição para o servidor de forma assíncrona
+echo [nvim-open] Enviando para o servidor %SERVER%open
+start "" curl -s -X POST %SERVER%open -H "Content-Type: text/plain" --data "%FILE%:%LINE%" >nul 2>&1
+
+exit /b
+
 

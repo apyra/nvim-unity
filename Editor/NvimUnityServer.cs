@@ -20,6 +20,8 @@ namespace NvimUnity
         private static Dictionary<string, string> _terminalByOS = new();
         public static string _status = "Stopped";
         private static string _serverAddress = "http://localhost:5005/";
+        private static bool _initialized = false;
+
         public static string ServerAddress
         {
             get => _serverAddress;
@@ -34,8 +36,16 @@ namespace NvimUnity
 
         static NvimUnityServer()
         {
+            InitOnce();
+        }
+
+        private static void InitOnce()
+        {
+            if (_initialized) return;
+            _initialized = true;
+
             Debug.Log("[NvimUnity] Initializing server...");
-            //StopServer();
+            StopServer();
             LoadConfig();
             StartServer();
         }
@@ -125,7 +135,7 @@ namespace NvimUnity
             _listener?.Stop();
             _listenerThread?.Abort();
         }
-        
+
         private static void HandleRequest(HttpListenerContext context)
         {
             string path = context.Request.Url.AbsolutePath;
@@ -180,19 +190,16 @@ namespace NvimUnity
             string socketPath = Path.Combine(rootDir, ".nvim_socket");
             Debug.Log("[NvimUnity] Socket path: " + socketPath);
 
-            string cmd = File.Exists(socketPath)
-                ? $"nvim --server \"{socketPath}\" --remote-tab +{line} \"{fullPath}\""
-                : $"nvim --listen \"{socketPath}\" +{line} \"{fullPath}\"";
-
-            RunDetachedTerminalFallbacks(cmd);
+            string launcherCmd = $"nvim-open.bat \"{fullPath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+            RunDetachedTerminalFallbacks(launcherCmd);
         }
 
         public static bool TryOpenStandalone(string filePath, int line)
         {
-            string cmd = $"nvim \"{filePath}\" +{line}";
+            string launcherCmd = $"nvim-open.bat \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
             try
             {
-                RunDetachedTerminalFallbacks(cmd);
+                RunDetachedTerminalFallbacks(launcherCmd);
                 return true;
             }
             catch (Exception ex)
