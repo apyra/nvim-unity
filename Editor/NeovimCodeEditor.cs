@@ -64,7 +64,7 @@ public class NeovimCodeEditor : IExternalCodeEditor
             var psi = new ProcessStartInfo
             {
 #if UNITY_EDITOR_WIN
-                FileName = launcher,
+                FileName = Path.GetFullPath(launcher),
                 Arguments = $"\"{fullPath}\" {lineArg}",
 #else
                 FileName = "/bin/bash",
