@@ -36,20 +36,19 @@ Packages/nvim-unity
 - Go to `Edit > Preferences > External Tools`
 - Select **Neovim (Unity)** (no need to browse for `.exe`)
 
-Once set up, when you double-click any `.cs` file in Unity, it will:
-
-- Launch Neovim  
-- Automatically regenerate `.csproj`, `.sln`, and `.vscode/` if missing
-
 ### Neovim (Lua)
 
-Use your plugin manager to install:
+### 🔁 File Sync with [nvim-unity-handle](https://github.com/apyra/nvim-unity-handle)
+
+This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` files in nvim even if Unity is closed:
+
 ```lua
 {
-  'apyra/nvim-unity-handle',
+  "apyra/nvim-unity-handle",
+  lazy = false,
   config = function()
-    require("unity").setup()
-  end
+    require("unity.plugin")
+  end,
 }
 ```
 
@@ -113,11 +112,25 @@ Install `omnisharp` using [mason.nvim](https://github.com/williamboman/mason.nvi
 ```lua
 local lspconfig = require("lspconfig")
 lspconfig.omnisharp.setup {
-  -- your config here
+  on_attach = nvlsp.on_attach,
+  capabilities = nvlsp.capabilities,
+  cmd = {
+    "dotnet",
+    vim.fn.stdpath "data" .. "\\mason\\packages\\omnisharp\\libexec\\OmniSharp.dll",
+  },
+  settings = {
+    FormattingOptions = {
+      EnableEditorConfigSupport = false,
+      OrganizeImports = true,
+    },
+    Sdk = {
+      IncludePrereleases = true,
+    },
+  },
 }
 ```
 
-> ⚠️ Omnisharp requires `.csproj` or `.sln` in the root folder — make sure to use "Regenerate Project Files" if missing.
+> ⚠️ Omnisharp requires `.csproj` or `.sln` in the root folder — make sure to use "Regenerate Project Files" if missing. *It takes some seconds to attach to your current buffer
 
 ---
 
@@ -135,22 +148,6 @@ lspconfig.omnisharp.setup {
 ```
 
 Then run `:TSInstall` in Neovim.
-
----
-
-### 🔁 File Sync with [nvim-unity-handle](https://github.com/apyra/nvim-unity-handle)
-
-This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` files in nvim:
-
-```lua
-{
-  "apyra/nvim-unity-handle",
-  lazy = false,
-  config = function()
-    require("unity.plugin")
-  end,
-}
-```
 
 ---
 
