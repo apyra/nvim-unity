@@ -8,7 +8,7 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 - 🧠 Automatically open C# scripts in Neovim when clicked in Unity
 - 🖥️ Opens all files from the same Unity project in the **same terminal and buffer**
-- 🔄 Regenerate `.csproj` files via a Unity button or `:UnityRegenerate` command
+- 🔄 Regenerate `.csproj` files via a Unity button
 - 🔌 Unity package + Neovim plugin architecture
 - 🔥 Zero dependency on `nvr` (Neovim Remote)
 - 🖥️ Cross-platform support (Windows, Linux, macOS)
