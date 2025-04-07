@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Net.Http;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -34,31 +33,10 @@ namespace NvimUnity
 
         public bool OpenFileAtLine(string filePath, int line)
         {
-            if (!IsNvimUnityDefaultEditor() || string.IsNullOrEmpty(filePath)) return false;
-            if (line < 1) line = 1;
-
-            string fullPath = Path.GetFullPath(filePath).Replace("\\", "/");
-            string data = $"{fullPath}:{line}";
-
-            try
-            {
-                var content = new StringContent(data, Encoding.UTF8, "text/plain");
-                var result = httpClient.PostAsync("http://localhost:5005/open", content).Result;
-
-                if (!result.IsSuccessStatusCode)
-                {
-                    Debug.LogWarning($"[NvimUnity] Server returned error: {result.StatusCode}");
-                    return false;
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("[NvimUnity] Failed to call /open endpoint: " + ex.Message);
-                return false;
-            }
+            if (!IsNvimUnityDefaultEditor()) return false;
+            return NvimUnityServer.OpenFile(filePath, line);
         }
+
 
         private static void EnsureLauncherExecutable()
         {
@@ -105,11 +83,12 @@ namespace NvimUnity
 
             GUILayout.Label("NvimUnity HTTP Server", EditorStyles.boldLabel);
             GUILayout.Label("Status: " + NvimUnityServer.GetStatus());
-            NvimUnityServer.ServerAddress = GUILayout.TextField(NvimUnityServer.ServerAddress);
+            var address = GUILayout.TextField(NvimUnityServer.ServerAddress);
 
             if (GUILayout.Button("Restart Server"))
             {
                 NvimUnityServer.StopServer();
+                NvimUnityServer.ServerAddress = address;
                 NvimUnityServer.StartServer();
             }
         }

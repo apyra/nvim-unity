@@ -14,30 +14,30 @@ namespace NvimUnity
     [InitializeOnLoad]
     public static class NvimUnityServer
     {
+        // --- Fields ---
         private static HttpListener _listener;
         private static Thread _listenerThread;
         private static bool _isRunning = false;
-        private static Dictionary<string, string> _terminalByOS = new();
-        public static string _status = "Stopped";
-        private static string _serverAddress = "http://localhost:5005/";
         private static bool _initialized = false;
+
+        private static Dictionary<string, string> _terminalByOS = new();
+        private static string _status = "Stopped";
+        private static string _serverAddress = "http://localhost:5005/";
 
         public static string ServerAddress
         {
             get => _serverAddress;
             set
             {
-                if (!_isRunning)
-                    _serverAddress = value;
-                else
-                    Debug.LogWarning("[NvimUnity] Cannot change server address while server is running.");
+                if (!_isRunning) _serverAddress = value;
+                else Debug.LogWarning("[NvimUnity] Cannot change server address while server is running.");
             }
         }
 
-        static NvimUnityServer()
-        {
-            InitOnce();
-        }
+        public static string GetStatus() => _status;
+
+        // --- Initialization ---
+        static NvimUnityServer() => InitOnce();
 
         private static void InitOnce()
         {
@@ -49,8 +49,6 @@ namespace NvimUnity
             LoadConfig();
             StartServer();
         }
-
-        public static string GetStatus() => _status;
 
         private static void LoadConfig()
         {
@@ -67,7 +65,8 @@ namespace NvimUnity
                     var parsed = JsonUtility.FromJson<Wrapper>("{\"terminals\":" + json + "}");
                     if (parsed.terminals != null)
                         _terminalByOS = parsed.terminals;
-                    Debug.Log("[NvimUnity] Loaded terminal configuration");
+
+                    Debug.Log("[NvimUnity] Loaded terminal configuration.");
                 }
                 catch (Exception e)
                 {
@@ -76,16 +75,14 @@ namespace NvimUnity
             }
             else
             {
-                Debug.LogWarning("[NvimUnity] Config file not found");
+                Debug.LogWarning("[NvimUnity] Config file not found.");
             }
         }
 
         [Serializable]
-        private class Wrapper
-        {
-            public Dictionary<string, string> terminals;
-        }
+        private class Wrapper { public Dictionary<string, string> terminals; }
 
+        // --- Server Control ---
         public static void StartServer()
         {
             if (_isRunning) return;
@@ -119,7 +116,7 @@ namespace NvimUnity
                     }
                     catch (Exception ex)
                     {
-                        Debug.LogWarning("[NvimUnity] Exception in listener thread: " + ex.Message);
+                        Debug.LogWarning("[NvimUnity] Listener thread exception: " + ex.Message);
                     }
                 }
             });
@@ -136,6 +133,7 @@ namespace NvimUnity
             _listenerThread?.Abort();
         }
 
+        // --- Request Handler ---
         private static void HandleRequest(HttpListenerContext context)
         {
             string path = context.Request.Url.AbsolutePath;
@@ -150,22 +148,7 @@ namespace NvimUnity
             }
             else if (path == "/open")
             {
-                using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
-                string payload = reader.ReadToEnd().Trim();
-                string[] parts = payload.Split(':');
-
-                if (parts.Length >= 1)
-                {
-                    string filePath = parts[0];
-                    int line = parts.Length >= 2 && int.TryParse(parts[1], out var l) ? l : 1;
-
-                    Debug.Log("[NvimUnity] Requested to open file: " + filePath + ":" + line);
-                    TryOpenInNvim(filePath, line);
-                }
-                else
-                {
-                    Debug.LogWarning("[NvimUnity] Received malformed open request");
-                }
+                HandleOpenRequest(context);
             }
 
             string response = "OK";
@@ -175,6 +158,63 @@ namespace NvimUnity
             context.Response.OutputStream.Close();
         }
 
+        private static void HandleOpenRequest(HttpListenerContext context)
+        {
+            using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
+            string payload = reader.ReadToEnd().Trim();
+            string[] parts = payload.Split(':');
+
+            if (parts.Length >= 1)
+            {
+                string filePath = parts[0];
+                int line = parts.Length >= 2 && int.TryParse(parts[1], out var l) ? l : 1;
+
+                Debug.Log("[NvimUnity] Open file requested: " + filePath + ":" + line);
+                TryOpenInNvim(filePath, line);
+            }
+            else
+            {
+                Debug.LogWarning("[NvimUnity] Malformed /open request.");
+            }
+        }
+
+        // --- Public File Opening API ---
+        public static bool OpenFile(string filePath, int line)
+        {
+            if (string.IsNullOrEmpty(filePath)) return false;
+            if (line < 1) line = 1;
+
+            string fullPath = Path.GetFullPath(filePath).Replace("\\", "/");
+
+            if (GetStatus() == "Running")
+            {
+                string data = $"{fullPath}:{line}";
+
+                try
+                {
+                    using var client = new HttpClient();
+                    var content = new StringContent(data, Encoding.UTF8, "text/plain");
+                    var result = client.PostAsync(ServerAddress.TrimEnd('/') + "/open", content).Result;
+
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        Debug.LogWarning($"[NvimUnity] Server responded with error: {result.StatusCode}");
+                        return false;
+                    }
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("[NvimUnity] Failed to reach /open endpoint: " + ex.Message);
+                }
+            }
+
+            // fallback if server isn't running
+            Debug.Log("[NvimUnity] Server not running, opening directly.");
+            return TryOpenStandalone(fullPath, line);
+        }
+
         public static void TryOpenInNvim(string filePath, int line)
         {
             string fullPath = Path.GetFullPath(filePath);
@@ -182,21 +222,19 @@ namespace NvimUnity
 
             if (string.IsNullOrEmpty(rootDir))
             {
-                Debug.LogWarning("[NvimUnity] Could not determine project root for: " + fullPath);
+                Debug.LogWarning("[NvimUnity] Could not find project root for: " + fullPath);
                 TryOpenStandalone(fullPath, line);
                 return;
             }
 
-            string socketPath = Path.Combine(rootDir, ".nvim_socket");
-            Debug.Log("[NvimUnity] Socket path: " + socketPath);
-
-            string launcherCmd = $"nvim-open.bat \"{fullPath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+            string launcherCmd = BuildLauncherCommand(fullPath, line);
             RunDetachedTerminalFallbacks(launcherCmd);
         }
 
         public static bool TryOpenStandalone(string filePath, int line)
         {
-            string launcherCmd = $"nvim-open.bat \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
+            string launcherCmd = BuildLauncherCommand(filePath, line);
+
             try
             {
                 RunDetachedTerminalFallbacks(launcherCmd);
@@ -204,9 +242,15 @@ namespace NvimUnity
             }
             catch (Exception ex)
             {
-                Debug.LogError("[NvimUnity] Fallback failed: " + ex.Message);
+                Debug.LogError("[NvimUnity] Fallback terminal open failed: " + ex.Message);
                 return false;
             }
+        }
+
+        // --- Helpers ---
+        private static string BuildLauncherCommand(string filePath, int line)
+        {
+            return $"nvim-open.bat \"{filePath}\" {line} \"{ServerAddress.TrimEnd('/')}\"";
         }
 
         private static void RunDetachedTerminalFallbacks(string cmd)
@@ -235,11 +279,11 @@ namespace NvimUnity
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogWarning($"[NvimUnity] Failed to launch terminal: {terminalCmd}, Error: {ex.Message}");
+                    Debug.LogWarning($"[NvimUnity] Failed to launch: {terminalCmd}, Error: {ex.Message}");
                 }
             }
 
-            throw new Exception("[NvimUnity] All terminal attempts failed.");
+            throw new Exception("[NvimUnity] All terminal fallback attempts failed.");
         }
 
         private static string GetCurrentOS()
