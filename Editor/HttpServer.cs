@@ -145,7 +145,7 @@ namespace NvimUnity
             else
             {
                 context.Response.StatusCode = 404;
-                WriteResponse(context, 500, "Not Found")
+                WriteResponse(context, 400, "Not Found");
             }
         }
 
