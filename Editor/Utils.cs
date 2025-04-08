@@ -104,7 +104,7 @@ namespace NvimUnity
             {
                 dir = dir.Parent;
             }
-            return dir ? dir.FullName : path;
+            return dir?.FullName | path;
         }
 
         public static string NormalizePath(string path)
