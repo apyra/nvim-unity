@@ -1,26 +1,30 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
     public static class FileOpener
     {
-        public static void OpenFile(string filePath, int line, string serverAddress, Dictionary<string, string> terminalConfig)
+        public static bool OpenFile(string filePath, int line, string serverAddress)
         {
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string cmd = Utils.BuildLauncherCommand(normalizedPath, line, serverAddress);
-                string os = Utils.GetCurrentOS();
+                string os = ConfigLoader.GetCurrentOS();
+
+                var config = ConfigLoader.LoadConfig();
+                Dictionary<string, List<string>> terminalConfig = config.Terminals;
+
                 List<string> terminals = TerminalCommandBuilder.GetCommands(terminalConfig, os, cmd);
 
                 foreach (var terminal in terminals)
                 {
                     if (TryStartDetachedTerminal(terminal))
-                        return;
+                        return true;
                 }
 
                 Debug.LogWarning("[NvimUnity] Failed to open file in any terminal.");
@@ -29,6 +33,8 @@ namespace NvimUnity
             {
                 Debug.LogError($"[NvimUnity] Error opening file: {e.Message}");
             }
+
+            return false;
         }
 
         private static bool TryStartDetachedTerminal(string command)
