@@ -23,7 +23,7 @@ set "TERMINAL=%TERMINAL:"=%"
 curl -s --max-time 1 %SERVER%status >nul
 if errorlevel 1 (
     echo [nvim-open] Servidor não encontrado, abrindo diretamente com terminal configurado...
-    %TERMINAL% -e nvim "%FILE%" +%LINE%
+    %TERMINAL% nvim "%FILE%" +%LINE%
     exit /b
 )
 
