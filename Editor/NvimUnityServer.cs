@@ -60,7 +60,7 @@ namespace NvimUnity
 
         public static void LoadConfig()
         {
-            terminalConfig = ConfigLoader.LoadConfig().Terminals; 
+            terminalConfig = ConfigLoader.LoadTerminalConfig().Terminals; 
         }
 
         public static bool OpenFile(string filePath, int line)

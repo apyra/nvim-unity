@@ -1,44 +1,46 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
     public static class FileOpener
     {
-        public static bool OpenFile(string filePath, int line, string serverAddress, Dictionary<string, string> terminalConfig)
+        public static bool OpenFile(string filePath, int line, string serverAddress)
         {
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string cmd = Utils.BuildLauncherCommand(normalizedPath, line, serverAddress);
-                string os = Utils.GetCurrentOS(); // Substituir se necessário
-                List<string> terminals = TerminalCommandBuilder.GetCommands(terminalConfig, os, cmd);
+                string os = Utils.GetCurrentOS();
 
-                foreach (var terminal in terminals)
+                var config = ConfigLoader.LoadTerminalConfig();
+                Dictionary<string, List<string>> terminals = config["terminals"] as Dictionary<string, List<string>>;
+                List<string> terminalCommands = TerminalCommandBuilder.GetCommands(terminals, os, cmd);
+
+                foreach (var terminal in terminalCommands)
                 {
                     if (TryStartDetachedTerminal(terminal))
                         return true;
                 }
 
                 Debug.LogWarning("[NvimUnity] Failed to open file in any terminal.");
-                return false;
             }
             catch (Exception e)
             {
                 Debug.LogError($"[NvimUnity] Error opening file: {e.Message}");
-                return false;
             }
-        }
 
+            return false;
+        }
 
         private static bool TryStartDetachedTerminal(string command)
         {
             try
             {
-#if UNITY_EDITOR_WIN
+    #if UNITY_EDITOR_WIN
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "cmd.exe",
@@ -46,7 +48,7 @@ namespace NvimUnity
                     UseShellExecute = true,
                     CreateNoWindow = true
                 });
-#else
+    #else
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "/bin/bash",
@@ -54,7 +56,7 @@ namespace NvimUnity
                     UseShellExecute = false,
                     CreateNoWindow = true
                 });
-#endif
+    #endif
                 return true;
             }
             catch (Exception e)
