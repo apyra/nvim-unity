@@ -25,9 +25,9 @@ curl -s --max-time 1 %SERVER%status >nul
 if errorlevel 1 (
     echo [NvimUnity] Server not found, opening with %TERMINAL%...
     if /i "%TERMINAL%"=="wt" (
-        start "" wt cmd /c "nvim -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
+        start "" wt cmd /k "nvim -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
     ) else (
-        start "" %TERMINAL% /c "nvim -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
+        start "" %TERMINAL% /k "nvim -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
     )
     exit /b
 )
