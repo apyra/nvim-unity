@@ -24,13 +24,6 @@ This Unity package integrates Neovim as an external script editor and provides a
 ```json
 https://github.com/apyra/nvim-unity.git
 ```
-
-Or clone/download and place into:
-
-```
-Packages/nvim-unity
-```
-
 2. Unity will auto-detect the editor as **"Neovim (Unity)"** in `External Tools`:
 
 - Go to `Edit > Preferences > External Tools`

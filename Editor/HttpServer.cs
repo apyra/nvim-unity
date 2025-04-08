@@ -87,20 +87,18 @@ namespace NvimUnity
             }
             else if (path == "/open" && method == "POST")
             {
-                using var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding);
-                var data = reader.ReadToEnd();
-                var parts = data.Split(':');
-                if (parts.Length == 2 && int.TryParse(parts[1], out int line))
-                {
-                    string file = parts[0];
-                    FileOpener.OpenFile(file, line);
-                    responseText = $"Opening {file}:{line}";
-                }
-                else
-                {
-                    responseText = "Invalid input";
-                    context.Response.StatusCode = 400;
-                }
+                string payload;
+                using (var reader = new StreamReader(context.Request.InputStream))
+                    payload = reader.ReadToEnd();
+
+                string[] parts = payload.Split(':');
+                string file = parts[0];
+                int line = parts.Length > 1 ? int.Parse(parts[1]) : 1;
+
+                bool ok = FileOpener.OpenFileInRunningNeovim(file, line);
+
+                context.Response.StatusCode = ok ? 200 : 500;
+                context.Response.Close();
             }
             else if (path == "/regenerate" && method == "POST")
             {

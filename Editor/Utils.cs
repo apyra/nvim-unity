@@ -9,6 +9,40 @@ namespace NvimUnity
 {
     public static class Utils
     {
+        public static string GetSocketPath()
+        {
+            try
+            {
+                string scriptDir = Path.GetDirectoryName(GetLauncherPath());
+                string configPath = Path.Combine(scriptDir, "config.json");
+
+                if (!File.Exists(configPath))
+                {
+                    Debug.LogWarning($"[NvimUnity] Config file not found: {configPath}");
+                    return null;
+                }
+
+                string json = File.ReadAllText(configPath);
+
+                // Simples regex para extrair o valor de "socket": "algum_path"
+                Match match = Regex.Match(json, @"""socket""\s*:\s*""([^""]+)""");
+                if (match.Success)
+                {
+                    return match.Groups[1].Value.Trim();
+                }
+                else
+                {
+                    Debug.LogWarning("[NvimUnity] 'socket' not found in config.json");
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[NvimUnity] Error reading socket from config.json: {e.Message}");
+            }
+
+            return null;
+        }
+
         public static void RegenerateProjectFiles()
         {
             var editorAssembly = typeof(UnityEditor.Editor).Assembly;

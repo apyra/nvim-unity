@@ -3,6 +3,7 @@
     "Windows": "wt",
     "Linux": "gnome-terminal",
     "OSX": "iTerm"
-  }
+  },
+  "socket": "\\\\.\\pipe\\nvim-unity"
 }
 
