@@ -58,23 +58,6 @@ namespace NvimUnity
             }
         }
 
-        public bool IsServerRunning(string serverUrl)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromMilliseconds(800);
-                    var result = client.GetAsync(serverUrl + "status").Result;
-                    return result.IsSuccessStatusCode;
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
         private void HandleRequests()
         {
             while (_isRunning)
