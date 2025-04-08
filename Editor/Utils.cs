@@ -104,7 +104,7 @@ namespace NvimUnity
             {
                 dir = dir.Parent;
             }
-            return dir?.FullName ?? Path.GetDirectoryName(path);
+            return NormalizePath(dir?.FullName ?? Path.GetDirectoryName(path));
         }
 
         public static string NormalizePath(string path)
