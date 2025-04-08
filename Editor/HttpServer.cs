@@ -87,38 +87,7 @@ namespace NvimUnity
             }
             else if (path == "/open" && method == "POST")
             {
-                try
-                {
-                    using (var reader = new StreamReader(context.Request.InputStream))
-                    {
-                        string content = reader.ReadToEnd().Trim();
-
-                        if (!string.IsNullOrEmpty(content) && content.Contains(":"))
-                        {
-                            var parts = content.Split(':');
-                            string file = parts[0];
-                            int line = int.TryParse(parts[1], out int parsedLine) ? parsedLine : 1;
-
-                            if (FileOpener.OpenInRunningServer(file, line))
-                            {
-                                WriteResponse(context, 200, "Opened in Neovim");
-                            }
-                            else
-                            {
-                                WriteResponse(context, 500, "Failed to open in running Neovim");
-                            }
-                        }
-                        else
-                        {
-                            WriteResponse(context, 400, "Invalid format. Use 'file:line'");
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[NvimUnity] Exception in /open: {ex}");
-                    WriteResponse(context, 500, "Internal server error");
-                }
+                HandleOpen(context);
             }
             else if (path == "/regenerate" && method == "POST")
             {
@@ -131,6 +100,45 @@ namespace NvimUnity
                 WriteResponse(context, 400, "Not Found");
             }
         }
+
+        private void HandleOpen(HttpListenerContext context)
+        {
+            try
+            {
+                using (var reader = new StreamReader(context.Request.InputStream, context.Request.ContentEncoding))
+                {
+                    var data = reader.ReadToEnd(); // formato esperado: path/to/file.cs:42
+
+                    if (!string.IsNullOrEmpty(data) && data.Contains(":"))
+                    {
+                        var parts = data.Split(':');
+                        var filePath = parts[0];
+                        var line = int.TryParse(parts[1], out var parsedLine) ? parsedLine : 1;
+
+                        bool success = FileOpener.OpenFile(filePath, line);
+
+                        if (success)
+                        {
+                            WriteResponse(context, 200, "Opened successfully.");
+                        }
+                        else
+                        {
+                            WriteResponse(context, 500, "Failed to open file.");
+                        }
+                    }
+                    else
+                    {
+                        WriteResponse(context, 400, "Invalid input.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NvimUnity] Exception in /open handler: {ex}");
+                WriteResponse(context, 500, $"Exception: {ex.Message}");
+            }
+        }
+
 
         private void WriteResponse(HttpListenerContext context, int statusCode, string message)
         {

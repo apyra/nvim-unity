@@ -10,7 +10,7 @@ namespace NvimUnity
 {
     public static class FileOpener
     {
-        private static readonly string LauncherPath = Utils.GetLauncherPath();
+        public static readonly string LauncherPath = Utils.GetLauncherPath();
         private static readonly string Socket = Utils.GetSocketPath();
 
         public static bool OpenFile(string filePath, int line)
