@@ -1,21 +1,4 @@
 @echo off
-setlocal EnableDelayedExpansion
-
-:: Args: file, line, server address
-set FILE=%~1
-set LINE=%~2
-set SERVER=%~3
-
-:: Caminho para config.json na mesma pasta deste .bat
-set "SCRIPT_DIR=%~dp0"
-@echo off
-setlocal
-
-set FILE=%1
-set LINE=%2
-set SERVER=%3
-
-@echo off
 setlocal
 
 set FILE=%1
@@ -36,6 +19,7 @@ set TERMINAL=%TERMINAL:"=%
 set TERMINAL=%TERMINAL:,=%
 set TERMINAL=%TERMINAL: =%
 
+cd /d "%~dp1"
 
 :: Testa conexão
 curl -s --max-time 1 %SERVER%status >nul
