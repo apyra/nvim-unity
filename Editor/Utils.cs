@@ -1,9 +1,11 @@
+using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using System;
-using System.Reflection;
+using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {

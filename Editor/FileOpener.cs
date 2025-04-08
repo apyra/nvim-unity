@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
+using System.Text;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
@@ -11,43 +13,66 @@ namespace NvimUnity
         private static readonly string LauncherPath = Utils.GetLauncherPath();
         private static readonly string Socket = Utils.GetSocketPath();
 
-        public static bool OpenFileViaLauncher(string filePath, int line)
+        public static bool OpenFile(string filePath, int line)
         {
             if (line < 1) line = 1;
 
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
-                string root = Utils.FindProjectRoot(filePath);
-                string args = Utils.BuildLauncherCommand(normalizedPath, line, NvimUnityServer.ServerAddress, root);
 
-                if (TryStartDetachedTerminal(args))
+                if (HttpServer.IsServerRunning(NvimUnityServer.ServerAddress))
                 {
-                    Debug.Log($"[NvimUnity] Opened file via launcher: {filePath}:{line}");
-                    return true;
+                    return OpenInRunningServer(normalizedPath, line);
+                }
+                else if (!string.IsNullOrEmpty(Socket) && File.Exists(Socket))
+                {
+                    return OpenInSocketInstance(normalizedPath, line);
                 }
                 else
                 {
-                    Debug.LogWarning("[NvimUnity] Failed to open file via launcher.");
+                    string root = Utils.FindProjectRoot(filePath);
+                    return OpenFileViaLauncher(normalizedPath, line, NvimUnityServer.ServerAddress, root);
                 }
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                Debug.LogError($"[NvimUnity] Exception while opening file: {e}");
+                Debug.LogError($"[NvimUnity] Error opening file: {ex}");
+                return false;
+            }
+        }
+
+        private static bool OpenInRunningServer(string filePath, int line)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    var content = new StringContent($"{filePath}:{line}", Encoding.UTF8, "text/plain");
+                    var response = client.PostAsync(NvimUnityServer.ServerAddress + "open", content).Result;
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        Debug.Log($"[NvimUnity] Opened in running server: {filePath}:{line}");
+                        return true;
+                    }
+
+                    Debug.LogWarning($"[NvimUnity] Server responded with: {response.StatusCode}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[NvimUnity] Failed to send to server: {ex.Message}");
             }
 
             return false;
         }
 
-        public static bool OpenFileInRunningNeovim(string filePath, int line)
+        private static bool OpenInSocketInstance(string filePath, int line)
         {
             try
             {
-                string normalizedPath = Utils.NormalizePath(filePath);
-                if (line < 1) line = 1;
-
-                // Usa nvim --server <socket> --remote
-                string command = $"nvim --server \"{Socket}\" --remote-send \":e {normalizedPath}<CR>{line}G\"";
+                string command = $"nvim --server \"{Socket}\" --remote-send \":e {filePath}<CR>{line}G\"";
 
                 var psi = new ProcessStartInfo
                 {
@@ -58,29 +83,32 @@ namespace NvimUnity
                 };
 
                 Process.Start(psi);
-                Debug.Log($"[NvimUnity] Sent file to running Neovim instance: {filePath}:{line}");
+                Debug.Log($"[NvimUnity] Sent to running Neovim via socket: {filePath}:{line}");
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogWarning($"[NvimUnity] Could not send file to running Neovim: {ex.Message}");
+                Debug.LogWarning($"[NvimUnity] Could not send via socket: {ex.Message}");
                 return false;
             }
         }
 
-        private static bool TryStartDetachedTerminal(string arguments)
+        private static bool OpenFileViaLauncher(string filePath, int line, string server, string root)
         {
             try
             {
+                string args = Utils.BuildLauncherCommand(filePath, line, server, root);
+
                 var psi = new ProcessStartInfo
                 {
                     FileName = LauncherPath,
-                    Arguments = arguments,
+                    Arguments = args,
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
 
                 Process.Start(psi);
+                Debug.Log($"[NvimUnity] Opened via launcher: {filePath}:{line}");
                 return true;
             }
             catch (Exception ex)

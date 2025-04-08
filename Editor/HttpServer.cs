@@ -58,6 +58,24 @@ namespace NvimUnity
             }
         }
 
+        public bool IsServerRunning(string serverUrl)
+        {
+            try
+            {
+                using (var client = new HttpClient())
+                {
+                    client.Timeout = TimeSpan.FromMilliseconds(800);
+                    var result = client.GetAsync(serverUrl + "status").Result;
+                    return result.IsSuccessStatusCode;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+
         private void HandleRequests()
         {
             while (_isRunning)
@@ -87,18 +105,38 @@ namespace NvimUnity
             }
             else if (path == "/open" && method == "POST")
             {
-                string payload;
-                using (var reader = new StreamReader(context.Request.InputStream))
-                    payload = reader.ReadToEnd();
+                try
+                {
+                    using (var reader = new StreamReader(context.Request.InputStream))
+                    {
+                        string content = reader.ReadToEnd().Trim();
 
-                string[] parts = payload.Split(':');
-                string file = parts[0];
-                int line = parts.Length > 1 ? int.Parse(parts[1]) : 1;
+                        if (!string.IsNullOrEmpty(content) && content.Contains(":"))
+                        {
+                            var parts = content.Split(':');
+                            string file = parts[0];
+                            int line = int.TryParse(parts[1], out int parsedLine) ? parsedLine : 1;
 
-                bool ok = FileOpener.OpenFileInRunningNeovim(file, line);
-
-                context.Response.StatusCode = ok ? 200 : 500;
-                context.Response.Close();
+                            if (FileOpener.OpenFileInRunningNeovim(file, line))
+                            {
+                                WriteResponse(context, 200, "Opened in Neovim");
+                            }
+                            else
+                            {
+                                WriteResponse(context, 500, "Failed to open in running Neovim");
+                            }
+                        }
+                        else
+                        {
+                            WriteResponse(context, 400, "Invalid format. Use 'file:line'");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[NvimUnity] Exception in /open: {ex}");
+                    WriteResponse(context, 500, "Internal server error");
+                }
             }
             else if (path == "/regenerate" && method == "POST")
             {
