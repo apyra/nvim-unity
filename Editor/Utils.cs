@@ -83,8 +83,7 @@ namespace NvimUnity
 
         public static string BuildLauncherCommand(string filePath, int line, string serverAddress)
         {
-            string launcherPath = FileOpener.launcher;
-            return $"\"{launcherPath}\" \"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
+            return $"\"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
         }
 
         public static string GetCurrentOS()
