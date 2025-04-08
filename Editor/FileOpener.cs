@@ -8,17 +8,13 @@ namespace NvimUnity
 {
     public static class FileOpener
     {
-        public static bool OpenFile(string filePath, int line, string serverAddress)
+        public static bool OpenFile(string filePath, int line, string serverAddress, Dictionary<string, string> terminalConfig)
         {
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string cmd = Utils.BuildLauncherCommand(normalizedPath, line, serverAddress);
-                string os = ConfigLoader.GetCurrentOS();
-
-                var config = ConfigLoader.LoadConfig();
-                Dictionary<string, List<string>> terminalConfig = config.Terminals;
-
+                string os = Utils.GetCurrentOS(); // Substituir se necessário
                 List<string> terminals = TerminalCommandBuilder.GetCommands(terminalConfig, os, cmd);
 
                 foreach (var terminal in terminals)
@@ -28,14 +24,15 @@ namespace NvimUnity
                 }
 
                 Debug.LogWarning("[NvimUnity] Failed to open file in any terminal.");
+                return false;
             }
             catch (Exception e)
             {
                 Debug.LogError($"[NvimUnity] Error opening file: {e.Message}");
+                return false;
             }
-
-            return false;
         }
+
 
         private static bool TryStartDetachedTerminal(string command)
         {

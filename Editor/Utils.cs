@@ -87,6 +87,17 @@ namespace NvimUnity
             return $"\"{launcherPath}\" \"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
         }
 
+        public static string GetCurrentOS()
+        {
+#if UNITY_EDITOR_WIN
+            return "Windows";
+#elif UNITY_EDITOR_OSX
+            return "OSX";
+#else
+            return "Linux";
+#endif
+        }
+
         public static string FindProjectRoot(string path)
         {
             var dir = new DirectoryInfo(Path.GetDirectoryName(path));
