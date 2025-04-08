@@ -53,15 +53,6 @@ namespace NvimUnity
         {
             return server == null ? "Stopped" : $"Running at {ServerAddress}";
         }
-
-        public static bool OpenFile(string filePath, int line)
-        {
-            if (terminalConfig == null)
-                LoadConfig();
-
-            FileOpener.OpenFile(filePath, line, ServerAddress);
-            return true; // sempre tenta abrir, retorno aqui é simbólico
-        }
     }
 }
 

@@ -93,7 +93,7 @@ namespace NvimUnity
                 if (parts.Length == 2 && int.TryParse(parts[1], out int line))
                 {
                     string file = parts[0];
-                    FileOpener.OpenFile(file, line, Address);
+                    FileOpener.OpenFile(file, line);
                     responseText = $"Opening {file}:{line}";
                 }
                 else

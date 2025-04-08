@@ -30,7 +30,7 @@ namespace NvimUnity
         public bool OpenFileAtLine(string filePath, int line)
         {
             if (!IsNvimUnityDefaultEditor()) return false;
-            return NvimUnityServer.OpenFile(filePath, line);
+            return FileOpener.OpenFile(filePath, line);
         }
 
         private static bool IsNvimUnityDefaultEditor()
@@ -69,7 +69,7 @@ namespace NvimUnity
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = editorName, Path = launcher }
+            new CodeEditor.Installation { Name = editorName, Path = FileOpener.launcher }
         };
 
         public void SyncAll()
