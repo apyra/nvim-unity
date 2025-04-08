@@ -22,7 +22,7 @@ namespace NvimUnity
         {
             if (server != null)
             {
-                Debug.Log("[NvimUnity] Server already running.");
+                //Debug.Log("[NvimUnity] Server already running.");
                 return;
             }
 
@@ -31,7 +31,7 @@ namespace NvimUnity
                 server = new HttpServer(ServerAddress){};
                 server.Start();
 
-                Debug.Log($"[NvimUnity] Server started at {ServerAddress}");
+                //Debug.Log($"[NvimUnity] Server started at {ServerAddress}");
             }
             catch (Exception ex)
             {
@@ -45,7 +45,7 @@ namespace NvimUnity
             {
                 server.Stop();
                 server = null;
-                Debug.Log("[NvimUnity] Server stopped.");
+                //Debug.Log("[NvimUnity] Server stopped.");
             }
         }
 

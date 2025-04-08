@@ -13,7 +13,7 @@ namespace NvimUnity
         private static void OnBeforeAssemblyReload()
         {
             NvimUnityServer.StopServer();
-            UnityEngine.Debug.Log("[NvimUnity] Server stopped before assembly reload.");
+            //UnityEngine.Debug.Log("[NvimUnity] Server stopped before assembly reload.");
         }
     }
 }

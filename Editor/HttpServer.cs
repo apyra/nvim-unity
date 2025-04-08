@@ -35,11 +35,11 @@ namespace NvimUnity
                 _listenerThread = new Thread(HandleRequests);
                 _listenerThread.Start();
 
-                Debug.Log($"[NvimUnity] HTTP server started at {Address}");
+                //Debug.Log($"[NvimUnity] HTTP server started at {Address}");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[NvimUnity] Failed to start HTTP server: {e.Message}");
+                //Debug.LogError($"[NvimUnity] Failed to start HTTP server: {e.Message}");
             }
         }
 
@@ -50,11 +50,11 @@ namespace NvimUnity
                 _isRunning = false;
                 _listener?.Stop();
                 _listenerThread?.Join();
-                Debug.Log("[NvimUnity] HTTP server stopped.");
+                //Debug.Log("[NvimUnity] HTTP server stopped.");
             }
             catch (Exception e)
             {
-                Debug.LogError($"[NvimUnity] Error stopping HTTP server: {e.Message}");
+                //Debug.LogError($"[NvimUnity] Error stopping HTTP server: {e.Message}");
             }
         }
 

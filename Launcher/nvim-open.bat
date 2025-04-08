@@ -9,9 +9,7 @@ set ROOT=%4
 set SCRIPT_DIR=%~dp0
 set CONFIG_FILE=%SCRIPT_DIR%config.json
 
-echo ROOT: %ROOT%
-cd /d "%ROOT%"
-echo CWD: %cd%
+cd "%ROOT%"
 
 for /f "tokens=2 delims=:" %%a in ('findstr /C:"Windows" "%CONFIG_FILE%"') do (
     set "TERMINAL=%%~a"

@@ -11,11 +11,11 @@ namespace NvimUnity
     [InitializeOnLoad]
     public class NeovimCodeEditor : IExternalCodeEditor
     {
-        private static readonly string editorName = "Neovim (NvimUnity)";
+        private static readonly string editorName = "Neovim";
 
         static NeovimCodeEditor()
         {
-            Debug.Log("[NvimUnity] Registering NeovimCodeEditor...");
+            //Debug.Log("[NvimUnity] Registering NeovimCodeEditor...");
             CodeEditor.Register(new NeovimCodeEditor());
         }
 
