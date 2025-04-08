@@ -20,6 +20,8 @@ namespace NvimUnity
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string root = Utils.FindProjectRoot(filePath);
                 string args = Utils.BuildLauncherCommand(normalizedPath, line, NvimUnityServer.ServerAddress,root);
+
+                Debug.Log("Passing Root Folder: " + root);
            
                 if (TryStartDetachedTerminal(args))
                     return true;
