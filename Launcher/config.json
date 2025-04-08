@@ -1,17 +1,8 @@
 {
   "terminals": {
-    "Windows": [
-      "wt -w 0 nt -d . cmd /c {cmd}",
-      "start cmd /c {cmd}"
-    ],
-    "Linux": [
-      "gnome-terminal -- bash -c '{cmd}'",
-      "x-terminal-emulator -e bash -c '{cmd}'"
-    ],
-    "OSX": [
-      "osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'",
-      "open -a Terminal \"{cmd}\""
-    ]
+    "Windows": "wt",
+    "Linux": "gnome-terminal",
+    "OSX": "iTerm"
   }
 }
 

@@ -83,7 +83,7 @@ namespace NvimUnity
 
         public static string BuildLauncherCommand(string filePath, int line, string serverAddress)
         {
-            string launcherPath = Path.GetFullPath(NormalizePath(GetLauncherPath()));
+            string launcherPath = FileOpener.launcher;
             return $"\"{launcherPath}\" \"{filePath}\" {line} \"{serverAddress.TrimEnd('/')}\"";
         }
 

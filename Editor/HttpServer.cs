@@ -15,7 +15,6 @@ namespace NvimUnity
         private bool _isRunning;
 
         public string Address { get; private set; }
-        public Dictionary<string, string> TerminalConfig { get; set; }
 
         public HttpServer(string address)
         {
@@ -94,7 +93,7 @@ namespace NvimUnity
                 if (parts.Length == 2 && int.TryParse(parts[1], out int line))
                 {
                     string file = parts[0];
-                    FileOpener.OpenFile(file, line, Address, TerminalConfig);
+                    FileOpener.OpenFile(file, line, Address);
                     responseText = $"Opening {file}:{line}";
                 }
                 else

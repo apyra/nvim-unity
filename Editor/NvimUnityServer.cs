@@ -15,7 +15,6 @@ namespace NvimUnity
 
         static NvimUnityServer()
         {
-            LoadConfig();
             StartServer();
         }
 
@@ -29,10 +28,7 @@ namespace NvimUnity
 
             try
             {
-                server = new HttpServer(ServerAddress)
-                {
-                    TerminalConfig = terminalConfig
-                };
+                server = new HttpServer(ServerAddress){};
                 server.Start();
 
                 Debug.Log($"[NvimUnity] Server started at {ServerAddress}");
@@ -58,17 +54,12 @@ namespace NvimUnity
             return server == null ? "Stopped" : $"Running at {ServerAddress}";
         }
 
-        public static void LoadConfig()
-        {
-            terminalConfig = ConfigLoader.LoadTerminalConfig().Terminals; 
-        }
-
         public static bool OpenFile(string filePath, int line)
         {
             if (terminalConfig == null)
                 LoadConfig();
 
-            FileOpener.OpenFile(filePath, line, ServerAddress, terminalConfig);
+            FileOpener.OpenFile(filePath, line, ServerAddress);
             return true; // sempre tenta abrir, retorno aqui é simbólico
         }
     }
