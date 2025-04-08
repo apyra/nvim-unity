@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace NvimUnity
 {
-    public static class HttpServer
+    public class HttpServer
     {
         private HttpListener _listener;
         private Thread _listenerThread;
