@@ -13,6 +13,8 @@ namespace NvimUnity
 
         public static bool OpenFile(string filePath, int line)
         {
+            if(line < 1) line = 1;
+
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
@@ -35,15 +37,16 @@ namespace NvimUnity
         {
             try
             {
-                var psi = new ProcessStartInfo();
-                psi.FileName = launcher;
-                psi.Arguments = args;
 
-/*#if UNITY_EDITOR_WIN*/
+/*#if UNITY_EDITOR_WIN
+/*
 /*                psi.Arguments = $"/c \"\" {args}";*/
 /*#else*/
 /*                psi.Arguments = $"-c \"{args}\"";*/
 /*#endif*/
+                var psi = new ProcessStartInfo();
+                psi.FileName = launcher;
+                psi.Arguments = args;
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
                 Process.Start(psi);
