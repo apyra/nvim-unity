@@ -42,9 +42,9 @@ curl -s --max-time 1 %SERVER%status >nul
 if errorlevel 1 (
     echo [nvim-open] Servidor não encontrado, abrindo com %TERMINAL%...
     if /i "%TERMINAL%"=="wt" (
-        start "" wt cmd /k "nvim \"%FILE%\" +%LINE%"
+        wt cmd /k "nvim \"%FILE%\" +%LINE%"
     ) else (
-        start "" %TERMINAL% /k nvim "%FILE%" +%LINE%
+        %TERMINAL% /k nvim "%FILE%" +%LINE%
     )
     exit /b
 )
