@@ -4,6 +4,10 @@ FILE="$1"
 LINE="${2:-1}"
 SERVER="${3:-http://localhost:42069}"
 CONFIG_FILE="$(dirname "$0")/config.json"
+ROOT="$4"
+
+# Muda para a raiz do projeto (importante pro Neovim abrir com o contexto certo)
+cd "$ROOT" || exit
 
 # Detecta sistema operacional (Linux ou OSX)
 OS="$(uname)"

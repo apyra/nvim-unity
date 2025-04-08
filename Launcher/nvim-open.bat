@@ -4,6 +4,10 @@ setlocal
 set FILE=%1
 set LINE=%2
 set SERVER=%3
+set ROOT=%4
+
+:: Muda para a raiz do projeto
+cd /d "%ROOT%"
 
 :: Caminho do config
 set SCRIPT_DIR=%~dp0
@@ -18,8 +22,6 @@ for /f "tokens=2 delims=:" %%a in ('findstr /C:"Windows" "%CONFIG_FILE%"') do (
 set TERMINAL=%TERMINAL:"=%
 set TERMINAL=%TERMINAL:,=%
 set TERMINAL=%TERMINAL: =%
-
-cd /d "%~dp1"
 
 :: Testa conexão
 curl -s --max-time 1 %SERVER%status >nul
