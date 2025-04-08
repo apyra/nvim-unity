@@ -40,7 +40,7 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
   "apyra/nvim-unity-handle",
   lazy = false,
   config = function()
-    require("unity.plugin")
+    require("unity.plugin").setup()
   end,
 }
 ```
@@ -51,9 +51,9 @@ You can edit it to match your preferred terminal for each OS:
 ```json
 {
   "terminals": {
-    "Windows": ["wt -w 0 nt -d . cmd /k {cmd}", "start cmd /k {cmd}"],
-    "Linux": ["gnome-terminal -- bash -c '{cmd}'", "x-terminal-emulator -e bash -c '{cmd}'"],
-    "OSX": ["osascript -e 'tell app \"Terminal\" to do script \"{cmd}\"'", "open -a Terminal \"{cmd}\""]
+    "Windows": "wt",
+    "Linux": "gnome-terminal",
+    "OSX": "iTerm"
   }
 }
 ```

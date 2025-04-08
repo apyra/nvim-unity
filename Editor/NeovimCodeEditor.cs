@@ -37,7 +37,7 @@ namespace NvimUnity
         {
             string defaultApp = Utils.NormalizePath(EditorPrefs.GetString("kScriptsDefaultApp"));
             return defaultApp.Contains("nvim-unity", StringComparison.OrdinalIgnoreCase)
-                   || defaultApp.Equals(FileOpener.launcher, StringComparison.OrdinalIgnoreCase);
+                   || defaultApp.Equals(FileOpener.LauncherPath, StringComparison.OrdinalIgnoreCase);
         }
 
         public void OnGUI()
@@ -69,7 +69,7 @@ namespace NvimUnity
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = editorName, Path = FileOpener.launcher }
+            new CodeEditor.Installation { Name = editorName, Path = FileOpener.LauncherPath }
         };
 
         public void SyncAll()
@@ -85,7 +85,7 @@ namespace NvimUnity
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
-            installation = new CodeEditor.Installation { Name = editorName, Path = FileOpener.launcher };
+            installation = new CodeEditor.Installation { Name = editorName, Path = FileOpener.LauncherPath };
             return true;
         }
     }

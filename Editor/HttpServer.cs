@@ -75,7 +75,6 @@ namespace NvimUnity
             }
         }
 
-
         private void HandleRequests()
         {
             while (_isRunning)
@@ -117,7 +116,7 @@ namespace NvimUnity
                             string file = parts[0];
                             int line = int.TryParse(parts[1], out int parsedLine) ? parsedLine : 1;
 
-                            if (FileOpener.OpenFileInRunningNeovim(file, line))
+                            if (FileOpener.OpenInRunningServer(file, line))
                             {
                                 WriteResponse(context, 200, "Opened in Neovim");
                             }
@@ -141,19 +140,26 @@ namespace NvimUnity
             else if (path == "/regenerate" && method == "POST")
             {
                 Utils.RegenerateProjectFiles();
-                responseText = "Regenerated";
+                WriteResponse(context, 200, "Regenerated");
             }
             else
             {
                 context.Response.StatusCode = 404;
-                responseText = "Not Found";
+                WriteResponse(context, 500, "Not Found")
             }
-
-            byte[] buffer = Encoding.UTF8.GetBytes(responseText);
-            context.Response.ContentLength64 = buffer.Length;
-            context.Response.OutputStream.Write(buffer, 0, buffer.Length);
-            context.Response.OutputStream.Close();
         }
+
+        private void WriteResponse(HttpListenerContext context, int statusCode, string message)
+        {
+            context.Response.StatusCode = statusCode;
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(message);
+            context.Response.ContentLength64 = buffer.Length;
+            using (Stream output = context.Response.OutputStream)
+            {
+                output.Write(buffer, 0, buffer.Length);
+            }
+        }
+
     }
 }
 

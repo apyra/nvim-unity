@@ -13,6 +13,8 @@ namespace NvimUnity
         private static readonly string LauncherPath = Utils.GetLauncherPath();
         private static readonly string Socket = Utils.GetSocketPath();
 
+        HttpServer httpServer;
+
         public static bool OpenFile(string filePath, int line)
         {
             if (line < 1) line = 1;
@@ -21,7 +23,7 @@ namespace NvimUnity
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
 
-                if (HttpServer.IsServerRunning(NvimUnityServer.ServerAddress))
+                if (httpServer.IsServerRunning(NvimUnityServer.ServerAddress))
                 {
                     return OpenInRunningServer(normalizedPath, line);
                 }
