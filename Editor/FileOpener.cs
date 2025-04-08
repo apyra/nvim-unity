@@ -10,6 +10,7 @@ namespace NvimUnity
     public static class FileOpener
     {
         public static readonly string launcher = Utils.GetLauncherPath();
+        public static string workingDir;
 
         public static bool OpenFile(string filePath, int line)
         {
@@ -19,6 +20,7 @@ namespace NvimUnity
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string args = Utils.BuildLauncherCommand(normalizedPath, line, NvimUnityServer.ServerAddress);
+                workingDir = Utils.FindProjectRoot(filePath);
            
                 if (TryStartDetachedTerminal(args))
                     return true;
@@ -37,18 +39,12 @@ namespace NvimUnity
         {
             try
             {
-
-/*#if UNITY_EDITOR_WIN
-/*
-/*                psi.Arguments = $"/c \"\" {args}";*/
-/*#else*/
-/*                psi.Arguments = $"-c \"{args}\"";*/
-/*#endif*/
                 var psi = new ProcessStartInfo();
                 psi.FileName = launcher;
                 psi.Arguments = args;
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
+                psi.WorkingDirectory = workingDir;
                 Process.Start(psi);
 
                 return true;
