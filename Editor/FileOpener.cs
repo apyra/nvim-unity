@@ -8,7 +8,7 @@ namespace NvimUnity
 {
     public static class FileOpener
     {
-        public static readonly string launcher = Utils.GetLauncherPath()));
+        public static readonly string launcher = Utils.GetLauncherPath();
 
         public static bool OpenFile(string filePath, int line)
         {
@@ -45,7 +45,7 @@ namespace NvimUnity
 /*#endif*/
                 psi.UseShellExecute = false;
                 psi.CreateNoWindow = true;
-                Process.Start(psi)
+                Process.Start(psi);
 
                 return true;
             }
