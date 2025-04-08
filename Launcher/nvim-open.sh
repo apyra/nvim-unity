@@ -2,33 +2,27 @@
 
 FILE="$1"
 LINE="${2:-1}"
-SERVER="$3"
+SERVER="${3:-http://localhost:42069}"
+CONFIG_FILE="$(dirname "$0")/config.json"
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-CONFIG_FILE="$SCRIPT_DIR/config.json"
+# Detecta sistema operacional (Linux ou OSX)
+OS="$(uname)"
+[[ "$OS" == "Darwin" ]] && OS="OSX"
 
-# Detecta o sistema operacional
-OS_TYPE="$(uname)"
-if [[ "$OS_TYPE" == "Darwin" ]]; then
-  OS_KEY="OSX"
-else
-  OS_KEY="Linux"
-fi
+# Lê terminal do config.json (requer jq instalado)
+TERMINAL=$(jq -r ".terminals.\"$OS\"" "$CONFIG_FILE")
 
-# Extrai terminal do config.json
-TERMINAL=$(grep "\"$OS_KEY\"" "$CONFIG_FILE" | cut -d':' -f2 | tr -d ' ",')
 if [ -z "$TERMINAL" ]; then
-  echo "[nvim-open] Terminal não encontrado no config.json para $OS_KEY"
+  echo "[nvim-open] Terminal não encontrado para $OS"
   exit 1
 fi
 
 # Verifica se o servidor está rodando
 if curl --silent --fail --max-time 1 "$SERVER/status" > /dev/null; then
-  echo "[nvim-open] Enviando para o servidor $SERVER/open"
+  echo "[nvim-open] Enviando para $SERVER/open"
   echo "$FILE:$LINE" | curl -s -X POST "$SERVER/open" -H "Content-Type: text/plain" --data-binary @-
 else
-  echo "[nvim-open] Servidor não encontrado, abrindo diretamente com $TERMINAL..."
-  "$TERMINAL" -e nvim "$FILE" +"$LINE"
+  echo "[nvim-open] Servidor não encontrado, abrindo diretamente com Neovim..."
+  "$TERMINAL" -e nvim "$FILE" +$LINE
 fi
-
 

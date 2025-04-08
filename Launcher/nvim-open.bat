@@ -26,12 +26,16 @@ set SERVER=%3
 set SCRIPT_DIR=%~dp0
 set CONFIG_FILE=%SCRIPT_DIR%config.json
 
-:: Lê terminal para Windows
+:: Lê terminal para Windows (limpa vírgula e aspas)
 for /f "tokens=2 delims=:" %%a in ('findstr /C:"Windows" "%CONFIG_FILE%"') do (
     set "TERMINAL=%%~a"
 )
-set TERMINAL=%TERMINAL: =%
+
+:: Remove aspas, vírgulas e espaços
 set TERMINAL=%TERMINAL:"=%
+set TERMINAL=%TERMINAL:,=%
+set TERMINAL=%TERMINAL: =%
+
 
 :: Testa conexão
 curl -s --max-time 1 %SERVER%status >nul
