@@ -118,7 +118,7 @@ namespace NvimUnity
             }
         }
 
-        private bool IsServerRunning(string serverUrl)
+        private static bool IsServerRunning(string serverUrl)
         {
             try
             {
