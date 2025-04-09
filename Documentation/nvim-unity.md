@@ -27,14 +27,6 @@ require("unity.plugin").setup({
 }
 ```
 
-## Unity Side
-- `NvimUnityServer` will start automatically when Unity opens.
-- HTTP endpoints:
-  - `POST /open` — opens a file in Neovim
-  - `POST /regenerate` — regenerates project files
-  - `GET /status` — check if the server is alive
-
-## License
 MIT
 
 

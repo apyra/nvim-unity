@@ -27,18 +27,18 @@ set "GOTO_LINE=%LINE%G%ESC%"
 
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% cmd /k ^
+        %TERMINAL% cmd /c ^
             "nvim --server \"%SOCKET%\" --remote \"%FILE%\" && nvim --server \"%SOCKET%\" --remote-send \"%GOTO_LINE%\""
     ) else (
-        %TERMINAL% cmd /k ^
+        %TERMINAL% cmd /c ^
             "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% /k ^
+        %TERMINAL% /c ^
             "nvim --server \"%SOCKET%\" --remote \"%FILE%\" && nvim --server \"%SOCKET%\" --remote-send \"%GOTO_LINE%\""
     ) else (
-        %TERMINAL% /k ^
+        %TERMINAL% /c ^
             "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 )

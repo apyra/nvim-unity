@@ -4,7 +4,7 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 ---
 
-## Features
+## 🧩 Features
 
 - 🧠 Automatically open C# scripts in Neovim when clicked in Unity
 - 🖥️ Opens all files from the same Unity project in the **same terminal and buffer**
@@ -64,21 +64,13 @@ This tells the launcher which terminal to use per OS. You can use any terminal y
 ## Usage
 
 ### Open Files from Unity
-- When you click a `.cs` file in Unity, it sends the path to the `NvimUnityServer` via HTTP.
-- The server ensures it opens in the correct Neovim instance/terminal.
+- Click in a `.cs` file in Unity and it will open in Neovim, simple like that.
 - All files from the same project share a terminal.
 
 ### Regenerate Project Files
 - From Unity: `Preferences > External Tools > Regenerate Project Files`
 - From Assets Menu: `Assets > NvimUnity > Regenerate Project Files`
 - From Neovim: ([nvim-unity-handle]("https://github.com/apyra/nvim-unity-handle.git"))`:Uregenerate`
-
----
-
-## How It Works
-
-- If a Neovim instance already exists for the Unity project, it reuses it.
-- `NvimUnityServer.cs` handles incoming HTTP `/open` and `/regenerate` commands.
 
 ---
 

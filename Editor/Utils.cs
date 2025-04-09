@@ -20,7 +20,7 @@ namespace NvimUnity
 
                 if (!File.Exists(configPath))
                 {
-                    Debug.LogWarning($"[NvimUnity] Config file not found: {configPath}");
+                    //Debug.LogWarning($"[NvimUnity] Config file not found: {configPath}");
                     return null;
                 }
 
