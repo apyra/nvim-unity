@@ -14,7 +14,7 @@ namespace NvimUnity
         private static readonly string socket = Utils.GetSocketPath();
         public static bool projectOpenInNeovim = false;
         
-        private static bool OpenFile(string filePath, int line)
+        public static bool OpenFile(string filePath, int line)
         {
             if (line < 1) line = 1;
 
