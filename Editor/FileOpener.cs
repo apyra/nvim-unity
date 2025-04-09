@@ -25,8 +25,8 @@ namespace NvimUnity
                 if (!projectOpenInNeovim)
                 {
                     string root = Utils.FindProjectRoot(filePath);
-                    return OpenFileViaLauncher(normalizedPath, line, root);
-                    projectOpenInNeovim = false;
+                    projectOpenInNeovim = OpenFileViaLauncher(normalizedPath, line, root);
+                    return projectOpenInNeovim;
                 }
                 else
                 {
