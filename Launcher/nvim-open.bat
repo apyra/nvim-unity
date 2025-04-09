@@ -42,7 +42,7 @@ set "VIMCMD=%VIMCMD%%CR%%LINE%G"
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
         echo Neovim já aberto - enviando comando via --remote-send
-        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" \"%FILE%\" +%LINE%"
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote \"%FILE%\" +%LINE%"
     ) else (
         echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
@@ -50,7 +50,7 @@ if /i "%TERMINAL%"=="wt" (
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
         echo Neovim já aberto - enviando comando via --remote-send
-        %TERMINAL% /k "nvim --server \"%SOCKET%\" \"%FILE%\" +%LINE%"
+        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote \"%FILE%\" +%LINE%"
     ) else (
         echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
