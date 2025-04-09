@@ -7,6 +7,14 @@ set "SOCKET=%~3"
 set "ROOT=%~4"
 set "ISPROJECTOPEN=%~5"
 
+@echo on
+echo FILE: %1
+echo LINE: %2
+echo SOCKET: %3
+echo ROOT: %4
+echo ISPROJECTOPEN: %5
+pause
+
 set "SCRIPT_DIR=%~dp0"
 set "CONFIG_FILE=%SCRIPT_DIR%config.json"
 
@@ -22,16 +30,20 @@ set "TERMINAL=%TERMINAL: =%"
 
 rem Decide o comando baseado no terminal e se o projeto já está aberto
 if /i "%TERMINAL%"=="wt" (
-    if "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>%LINE%G\""
+    if /i "%ISPROJECTOPEN%"=="true" (
+        echo Neovim já aberto - enviando comando
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
     ) else (
+        echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 ) else (
-    if "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>%LINE%G\""
+    if /i "%ISPROJECTOPEN%"=="true" (
+        echo Neovim já aberto - enviando comando
+        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
     ) else (
-        %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
+        echo Neovim ainda não aberto - iniciando com --listen
+        %TERMINAL% /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 )
 

@@ -119,7 +119,7 @@ namespace NvimUnity
 
         public static string BuildLauncherCommand(string filePath, int line, string socket, string root, bool isOpen)
         {
-            return $"\"{filePath}\" {line} \"{socket}\" \"{root}\" {isOpen.ToString().ToLower()}";
+            return $"\"{filePath}\" {line} \"{socket}\" \"{root}\" {(isOpen ? "true" : "false")}";
         }
 
         public static string GetCurrentOS()

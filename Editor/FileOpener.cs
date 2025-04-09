@@ -21,7 +21,12 @@ namespace NvimUnity
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string root = Utils.FindProjectRoot(filePath);
-                string args = Utils.BuildLauncherCommand(filePath, line, socket, root, SocketChecker.IsSocketActive(socket));
+                bool isRunniginNeovim = SocketChecker.IsSocketActive(socket);
+                string args = Utils.BuildLauncherCommand(filePath, line, socket, root, isRunniginNeovim);
+
+                Debug.Log($"[NvimUnity] Socket ativo? {isRunniginNeovim}");
+                Debug.Log($"[NvimUnity] Launcher path: {LauncherPath}");
+                Debug.Log($"[NvimUnity] Args: {args}");
 
                 var psi = new ProcessStartInfo
                 {
