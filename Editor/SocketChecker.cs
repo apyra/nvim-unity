@@ -2,6 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.IO;
+using System.IO.Pipes;
 
 namespace NvimUnity
 {
