@@ -1,7 +1,6 @@
 using System;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.IO;
 using System.IO.Pipes;
 
 namespace NvimUnity
@@ -10,21 +9,22 @@ namespace NvimUnity
     {
         public static bool IsSocketActive(string socketPath)
         {
-            if (string.IsNullOrWhiteSpace(socketPath) || !File.Exists(socketPath))
+            if (string.IsNullOrWhiteSpace(socketPath))
                 return false;
 
             try
             {
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    // Named pipe em Windows
-                    using var client = new NamedPipeClientStream(".", socketPath, PipeDirection.InOut);
-                    client.Connect(100); // tenta conectar por 100ms
+                    // Remover o prefixo \\.\pipe\ para passar só o nome do pipe
+                    string pipeName = socketPath.Replace(@"\\.\pipe\", "");
+
+                    using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
+                    client.Connect(100); // timeout em milissegundos
                     return true;
                 }
                 else
                 {
-                    // Unix socket
                     var endPoint = new UnixDomainSocketEndPoint(socketPath);
                     using var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
                     sock.Connect(endPoint);
