@@ -34,13 +34,13 @@ namespace NvimUnity
 
                 Process.Start(psi);
                 Debug.Log($"[NvimUnity] Opened via launcher: {filePath}:{line}");
-                projectOpenInNeovim = true;
+                isProjectOpenInNeovim = true;
                 return true;
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[NvimUnity] Could not start launcher: {ex.Message}");
-                projectOpenInNeovim = false;
+                isProjectOpenInNeovim = false;
                 return false;
             }
         }
