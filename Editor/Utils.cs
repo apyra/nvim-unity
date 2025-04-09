@@ -30,7 +30,9 @@ namespace NvimUnity
                 Match match = Regex.Match(json, @"""socket""\s*:\s*""([^""]+)""");
                 if (match.Success)
                 {
-                    return match.Groups[1].Value.Trim();
+                    string rawSocket = match.Groups[1].Value.Trim();
+                    string normalizedSocket = rawSocket.Replace(@"\\", @"\");
+                    return normalizedSocket;
                 }
                 else
                 {
