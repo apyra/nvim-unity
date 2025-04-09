@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 set "FILE=%~1"
 set "LINE=%~2"
@@ -7,32 +7,53 @@ set "SOCKET=%~3"
 set "ROOT=%~4"
 set "ISPROJECTOPEN=%~5"
 
+rem DEBUG
+echo === nvim-open.bat ===
+echo FILE: %FILE%
+echo LINE: %LINE%
+echo SOCKET: %SOCKET%
+echo ROOT: %ROOT%
+echo ISPROJECTOPEN: %ISPROJECTOPEN%
+echo =====================
+echo.
+
+rem Localiza o terminal no config.json
 set "SCRIPT_DIR=%~dp0"
 set "CONFIG_FILE=%SCRIPT_DIR%config.json"
 
-rem Lê terminal do config.json para Windows
 for /f "tokens=2 delims=:" %%a in ('findstr /C:"Windows" "%CONFIG_FILE%"') do (
     set "TERMINAL=%%~a"
 )
 
-rem Limpa caracteres indesejados
+rem Remove aspas, vírgulas e espaços
 set "TERMINAL=%TERMINAL:"=%"
 set "TERMINAL=%TERMINAL:,=%"
 set "TERMINAL=%TERMINAL: =%"
 
-rem Decide o comando baseado no terminal e se o projeto já está aberto
+rem DEBUG terminal
+echo Terminal selecionado: %TERMINAL%
+echo.
+
+rem Comando a ser enviado para Neovim já aberto
+set "VIMCMD=:e %FILE%^M%LINE%G"
+
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \":e %FILE%<CR>%LINE%G\""
+        echo Neovim já aberto - enviando comando via --remote-send
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \"%VIMCMD%\""
     ) else (
+        echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote-send \":e %FILE%<CR>%LINE%G\""
+        echo Neovim já aberto - enviando comando via --remote-send
+        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote-send \"%VIMCMD%\""
     ) else (
+        echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 )
 
+endlocal
 
