@@ -35,7 +35,9 @@ echo Terminal selecionado: %TERMINAL%
 echo.
 
 rem Comando a ser enviado para Neovim já aberto
-set "VIMCMD=:e %FILE%^M%LINE%G"
+for /f %%C in ('echo prompt $E ^| cmd') do set "CR=%%C"
+set "VIMCMD=:e %FILE%%CR%%LINE%G"
+
 
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
