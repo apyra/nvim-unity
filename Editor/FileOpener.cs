@@ -12,7 +12,7 @@ namespace NvimUnity
     {
         public static readonly string LauncherPath = Utils.GetLauncherPath();
         private static readonly string socket = Utils.GetSocketPath();
-        public static bool projectOpenInNeovim = false;
+        public static bool isProjectOpenInNeovim = false;
         
         public static bool OpenFile(string filePath, int line)
         {
@@ -22,7 +22,7 @@ namespace NvimUnity
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
                 string root = Utils.FindProjectRoot(filePath);
-                string args = Utils.BuildLauncherCommand(filePath, line, socket, root, projectOpenInNeovim);
+                string args = Utils.BuildLauncherCommand(filePath, line, socket, root, isProjectOpenInNeovim);
 
                 var psi = new ProcessStartInfo
                 {
