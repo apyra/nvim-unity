@@ -35,14 +35,14 @@ echo Terminal selecionado: %TERMINAL%
 echo.
 
 rem Comando a ser enviado para Neovim já aberto
-for /f %%C in ('echo prompt $E ^| cmd') do set "CR=%%C"
-set "VIMCMD=:e %FILE%%CR%%LINE%G"
+set "VIMCMD=:e %FILE%" & for /f %%C in ('echo prompt $E ^| cmd') do set "CR=%%C"
+set "VIMCMD=%VIMCMD%%CR%%LINE%G"
 
 
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
         echo Neovim já aberto - enviando comando via --remote-send
-        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \"%VIMCMD%\""
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" \"%FILE%\" +%LINE%"
     ) else (
         echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
@@ -50,7 +50,7 @@ if /i "%TERMINAL%"=="wt" (
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
         echo Neovim já aberto - enviando comando via --remote-send
-        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote-send \"%VIMCMD%\""
+        %TERMINAL% /k "nvim --server \"%SOCKET%\" \"%FILE%\" +%LINE%"
     ) else (
         echo Neovim ainda não aberto - iniciando com --listen
         %TERMINAL% /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
