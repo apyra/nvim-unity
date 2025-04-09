@@ -5,7 +5,7 @@ set FILE=%1
 set LINE=%2
 set SOCKET=%3
 set ROOT=%4
-set ISSERVER=%5
+set ISPROJECTOPEN=%5
 
 set SCRIPT_DIR=%~dp0
 set CONFIG_FILE=%SCRIPT_DIR%config.json
@@ -21,18 +21,17 @@ set TERMINAL=%TERMINAL: =%
 
 
 if /i "%TERMINAL%"=="wt" (
-    if "%ISSERVER%"(
-   %TERMINAL% cmd /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
-   )else (
-    %TERMINAL% cmd /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
-   )
+    if "%ISPROJECTOPEN%"(
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
+    )else (
+        %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
+    )
 ) else (
-    if "%ISSERVER%"(
-   %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
-   )else (
-    %TERMINAL% /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
-   )
-   
+    if "%ISPROJECTOPEN%"(
+        %TERMINAL% /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
+    )else (
+        %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
+    )
 )
 
 
