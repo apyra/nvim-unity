@@ -11,7 +11,8 @@ namespace NvimUnity
     public static class FileOpener
     {
         public static readonly string LauncherPath = Utils.GetLauncherPath();
-        private static readonly string Socket = Utils.GetSocketPath();
+        private static readonly string socket = Utils.GetSocketPath();
+        private bool nvimOpen = false;
 
         public static bool OpenFile(string filePath, int line)
         {
@@ -21,18 +22,15 @@ namespace NvimUnity
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
 
-                if (IsServerRunning(NvimUnityServer.ServerAddress))
+                if (!nvimOpen)
                 {
-                    return OpenInRunningServer(normalizedPath, line);
-                }
-                else if (!string.IsNullOrEmpty(Socket) && File.Exists(Socket))
-                {
-                    return OpenInSocketInstance(normalizedPath, line);
+                    string root = Utils.FindProjectRoot(filePath);
+                    return OpenFileViaLauncher(normalizedPath, line, socket, root);
+                    firstTimeOpenning = false;
                 }
                 else
                 {
-                    string root = Utils.FindProjectRoot(filePath);
-                    return OpenFileViaLauncher(normalizedPath, line, NvimUnityServer.ServerAddress, root);
+                    return OpenInSocketInstance(normalizedPath,line);
                 }
             }
             catch (Exception ex)
@@ -41,38 +39,12 @@ namespace NvimUnity
                 return false;
             }
         }
-
-        private static bool OpenInRunningServer(string filePath, int line)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    var content = new StringContent($"{filePath}:{line}", Encoding.UTF8, "text/plain");
-                    var response = client.PostAsync(NvimUnityServer.ServerAddress + "open", content).Result;
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        Debug.Log($"[NvimUnity] Opened in running server: {filePath}:{line}");
-                        return true;
-                    }
-
-                    Debug.LogWarning($"[NvimUnity] Server responded with: {response.StatusCode}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[NvimUnity] Failed to send to server: {ex.Message}");
-            }
-
-            return false;
-        }
-
+        
         private static bool OpenInSocketInstance(string filePath, int line)
         {
             try
             {
-                string command = $"nvim --server \"{Socket}\" --remote-send \":e {filePath}<CR>{line}G\"";
+                string command = $"nvim --server \"{socket}\" --remote-send \":e {filePath}<CR>{line}G\"";
 
                 var psi = new ProcessStartInfo
                 {
@@ -93,11 +65,11 @@ namespace NvimUnity
             }
         }
 
-        private static bool OpenFileViaLauncher(string filePath, int line, string server, string root)
+        private static bool OpenFileViaLauncher(string filePath, int line, string root)
         {
             try
             {
-                string args = Utils.BuildLauncherCommand(filePath, line, server, root);
+                string args = Utils.BuildLauncherCommand(filePath, line, socket, root);
 
                 var psi = new ProcessStartInfo
                 {
@@ -114,23 +86,6 @@ namespace NvimUnity
             catch (Exception ex)
             {
                 Debug.LogWarning($"[NvimUnity] Could not start launcher: {ex.Message}");
-                return false;
-            }
-        }
-
-        private static bool IsServerRunning(string serverUrl)
-        {
-            try
-            {
-                using (var client = new HttpClient())
-                {
-                    client.Timeout = TimeSpan.FromMilliseconds(800);
-                    var result = client.GetAsync(serverUrl + "status").Result;
-                    return result.IsSuccessStatusCode;
-                }
-            }
-            catch
-            {
                 return false;
             }
         }
