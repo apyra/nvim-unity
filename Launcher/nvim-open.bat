@@ -23,7 +23,7 @@ set "TERMINAL=%TERMINAL: =%"
 rem ESC para <CR>
 for /f %%C in ('echo prompt $E ^| cmd') do set "ESC=%%C"
 
-set "GOTO_LINE=%LINE%G%ESC%"
+set "GOTO_LINE=%LINE%%ESC%"
 
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
