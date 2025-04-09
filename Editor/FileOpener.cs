@@ -12,7 +12,7 @@ namespace NvimUnity
     {
         public static readonly string LauncherPath = Utils.GetLauncherPath();
         private static readonly string socket = Utils.GetSocketPath();
-        public static bool isProjectOpenInNeovim = false;
+        private static bool isProjectOpenInNeovim = SocketChecker.IsSocketActive(socket);
         
         public static bool OpenFile(string filePath, int line)
         {
@@ -34,13 +34,25 @@ namespace NvimUnity
 
                 Process.Start(psi);
                 Debug.Log($"[NvimUnity] Opened via launcher: {filePath}:{line}");
-                isProjectOpenInNeovim = true;
                 return true;
             }
             catch (Exception ex)
             {
                 Debug.LogWarning($"[NvimUnity] Could not start launcher: {ex.Message}");
-                isProjectOpenInNeovim = false;
+                return false;
+            }
+        }
+
+        bool IsSocketActive(string socketPath)
+        {
+            try
+            {
+                using var client = new NamedPipeClientStream(".", socketPath.Replace(@"\\.\pipe\", ""), PipeDirection.Out);
+                client.Connect(100); // tenta conectar em 100ms
+                return true;
+            }
+            catch
+            {
                 return false;
             }
         }
