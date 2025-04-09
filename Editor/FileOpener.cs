@@ -48,8 +48,8 @@ namespace NvimUnity
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = "cmd.exe",
-                    Arguments = $"/c {command}",
+                    FileName = "wt",
+                    Arguments = $"cmd /c {command}",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 };
