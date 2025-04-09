@@ -23,15 +23,16 @@ set "TERMINAL=%TERMINAL: =%"
 rem Decide o comando baseado no terminal e se o projeto já está aberto
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% cmd /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
+        %TERMINAL% cmd /k "nvim --server \"%SOCKET%\" --remote-send \":e %FILE%<CR>%LINE%G\""
     ) else (
-        %TERMINAL% cmd /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
+        %TERMINAL% cmd /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
-        %TERMINAL% /c "nvim --server \"%SOCKET%\" --remote-send \":e '%FILE%'<CR>'%LINE%'G\""
+        %TERMINAL% /k "nvim --server \"%SOCKET%\" --remote-send \":e %FILE%<CR>%LINE%G\""
     ) else (
-        %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
+        %TERMINAL% /k "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 )
+
 
