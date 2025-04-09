@@ -14,19 +14,23 @@ for /f "tokens=2 delims=:" %%a in ('findstr /C:"Windows" "%CONFIG_FILE%"') do (
     set "TERMINAL=%%~a"
 )
 
-REM rem Lê socket
-REM for /f "tokens=2 delims=:" %%a in ('findstr /C:"socket" "%CONFIG_FILE%"') do (
-REM     set "SOCKET=%%~a"
-REM )
+rem Lê socket
+for /f "tokens=2 delims=:" %%a in ('findstr /C:"socket" "%CONFIG_FILE%"') do (
+    set "SOCKET=%%~a"
+)
 
 set TERMINAL=%TERMINAL:"=%  
 set TERMINAL=%TERMINAL:,=%  
 set TERMINAL=%TERMINAL: =%
 
+set SOCKET=%SOCKET:"=%
+set SOCKET=%SOCKET:,=%
+set SOCKET=%SOCKET: =%
+
 if /i "%TERMINAL%"=="wt" (
-   %TERMINAL% cmd /c "cd /d \"%ROOT%\" && nvim --remote-tab-silent -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
+   %TERMINAL% cmd /c "cd /d \"%ROOT%\" && nvim --server \"%SOCKET%\" --remote \"%FILE%\" +%LINE%"
 ) else (
-   %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --remote-tab-silent -c \"let g:unity_server = '%SERVER%'\" \"%FILE%\" +%LINE%"
+   %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --remote \"%SOCKET%\" \"%FILE%\" +%LINE%"
 )
 
 
@@ -46,4 +50,5 @@ REM     exit /b
 REM )
 
 REM start "" curl -s -X POST %SERVER%open -H "Content-Type: text/plain" --data "%FILE%:%LINE%" >nul 2>&1
+
 
