@@ -32,7 +32,7 @@ namespace NvimUnity
                 {
                     FileName = LauncherPath,
                     Arguments = args,
-                    UseShellExecute = false,
+                    UseShellExecute = true,
                     CreateNoWindow = true
                 };
 

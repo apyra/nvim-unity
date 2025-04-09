@@ -47,3 +47,7 @@ if /i "%TERMINAL%"=="wt" (
     )
 )
 
+>> "%SCRIPT_DIR%\launcher.log" echo FILE: %FILE%
+>> "%SCRIPT_DIR%\launcher.log" echo SOCKET: %SOCKET%
+>> "%SCRIPT_DIR%\launcher.log" echo ISPROJECTOPEN: %ISPROJECTOPEN%
+

@@ -1,8 +1,7 @@
 using System;
-using System.IO;
-using System.IO.Pipes;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.IO;
 
 namespace NvimUnity
 {
@@ -10,45 +9,26 @@ namespace NvimUnity
     {
         public static bool IsSocketActive(string socketPath)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return CheckNamedPipe(socketPath);
-            }
-            else
-            {
-                return CheckUnixSocket(socketPath);
-            }
-        }
-
-        private static bool CheckNamedPipe(string pipePath)
-        {
-            // Ex: \\.\pipe\nvim-socket
-            if (!pipePath.StartsWith(@"\\.\pipe\")) return false;
-
-            string pipeName = pipePath.Replace(@"\\.\pipe\", "");
-            try
-            {
-                using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.Out);
-                client.Connect(100); // timeout de 100ms
-                return true;
-            }
-            catch
-            {
+            if (string.IsNullOrWhiteSpace(socketPath) || !File.Exists(socketPath))
                 return false;
-            }
-        }
-
-        private static bool CheckUnixSocket(string socketPath)
-        {
-            if (!File.Exists(socketPath)) return false;
 
             try
             {
-                var endPoint = new UnixDomainSocketEndPoint(socketPath);
-                using var client = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
-                var connectTask = client.ConnectAsync(endPoint);
-                bool connected = connectTask.Wait(100); // timeout de 100ms
-                return connected && client.Connected;
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    // Named pipe em Windows
+                    using var client = new NamedPipeClientStream(".", socketPath, PipeDirection.InOut);
+                    client.Connect(100); // tenta conectar por 100ms
+                    return true;
+                }
+                else
+                {
+                    // Unix socket
+                    var endPoint = new UnixDomainSocketEndPoint(socketPath);
+                    using var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+                    sock.Connect(endPoint);
+                    return true;
+                }
             }
             catch
             {
