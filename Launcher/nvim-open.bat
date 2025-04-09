@@ -30,7 +30,7 @@ set SOCKET=%SOCKET: =%
 if /i "%TERMINAL%"=="wt" (
    %TERMINAL% cmd /c "cd /d \"%ROOT%\" && nvim --server \"%SOCKET%\" --remote \"%FILE%\" +%LINE%"
 ) else (
-   %TERMINAL% /c "cd /d \"%ROOT%\" && nvim --remote \"%SOCKET%\" \"%FILE%\" +%LINE%"
+   %TERMINAL% /c "cd /d \"%ROOT%\" && nvim \"%SOCKET%\" --remote \"%FILE%\" +%LINE%"
 )
 
 
