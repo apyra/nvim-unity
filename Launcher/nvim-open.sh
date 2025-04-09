@@ -18,7 +18,7 @@ TERMINAL=$(jq -r '.terminals.Linux // .terminals.OSX' "$CONFIG_FILE")
 
 # Escape para <CR>
 ESC=$'\x1b'
-GOTO_LINE="${LINE}G${ESC}"
+GOTO_LINE="${LINE}${ESC}"
 
 if [ "$ISPROJECTOPEN" = "true" ]; then
   "$TERMINAL" -e bash -c \
