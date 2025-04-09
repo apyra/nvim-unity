@@ -20,26 +20,15 @@ set "TERMINAL=%TERMINAL:"=%"
 set "TERMINAL=%TERMINAL:,=%"
 set "TERMINAL=%TERMINAL: =%"
 
-rem ESC para CR
+rem ESC para <CR>
 for /f %%C in ('echo prompt $E ^| cmd') do set "ESC=%%C"
 
-set "CMD1=:e %FILE%%ESC%"
-set "CMD2=%LINE%G%ESC%"
-
-echo.
-echo ===== Enviando para Neovim =====
-echo Arquivo: %FILE%
-echo Linha: %LINE%
-echo Socket: %SOCKET%
-echo Comando 1: %CMD1%
-echo Comando 2: %CMD2%
-echo =================================
-echo.
+set "GOTO_LINE=%LINE%G%ESC%"
 
 if /i "%TERMINAL%"=="wt" (
     if /i "%ISPROJECTOPEN%"=="true" (
         %TERMINAL% cmd /k ^
-            "nvim --server \"%SOCKET%\" --remote-send \"%CMD1%\" && nvim --server \"%SOCKET%\" --remote-send \"%CMD2%\""
+            "nvim --server \"%SOCKET%\" --remote \"%FILE%\" && nvim --server \"%SOCKET%\" --remote-send \"%GOTO_LINE%\""
     ) else (
         %TERMINAL% cmd /k ^
             "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
@@ -47,12 +36,12 @@ if /i "%TERMINAL%"=="wt" (
 ) else (
     if /i "%ISPROJECTOPEN%"=="true" (
         %TERMINAL% /k ^
-            "nvim --server \"%SOCKET%\" --remote-send \"%CMD1%\" && nvim --server \"%SOCKET%\" --remote-send \"%CMD2%\""
+            "nvim --server \"%SOCKET%\" --remote \"%FILE%\" && nvim --server \"%SOCKET%\" --remote-send \"%GOTO_LINE%\""
     ) else (
         %TERMINAL% /k ^
             "cd /d \"%ROOT%\" && nvim --listen \"%SOCKET%\" \"%FILE%\" +%LINE%"
     )
 )
 
-pause
+endlocal
 
