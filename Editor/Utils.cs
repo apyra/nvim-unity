@@ -108,21 +108,7 @@ namespace NvimUnity
 
         public static string FindProjectRoot()
         {
-            var current = Directory.GetCurrentDirectory();
-
-            while (!string.IsNullOrEmpty(current))
-            {
-                bool hasAssets = Directory.Exists(Path.Combine(current, "Assets"));
-                bool hasLibrary = Directory.Exists(Path.Combine(current, "Library"));
-                bool hasPackages = Directory.Exists(Path.Combine(current, "Packages"));
-
-                if (hasAssets && hasLibrary && hasPackages)
-                    return current;
-
-                current = Directory.GetParent(current)?.FullName;
-            }
-
-            return null;
+            return NormalizePath(Path.GetDirectoryName(Application.dataPath));
         }
 
         public static string NormalizePath(string path)
