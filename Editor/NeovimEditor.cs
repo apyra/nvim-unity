@@ -68,6 +68,7 @@ namespace NvimUnity
             if (GUILayout.Button("Save"))
             {
                 config.terminals[OS] = Terminal;
+
                 Utils.SaveConfig(config);
                 EditorUtility.DisplayDialog("Saved", $"Terminal for {OS} saved!", "OK");
             }

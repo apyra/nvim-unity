@@ -90,9 +90,25 @@ namespace NvimUnity
 
         public static string BuildLauncherCommand(string filePath, int line, string terminal, string socket, string root, bool isOpen)
         {
-            return $"\"{filePath}\" {line} \"{terminal}\" \"{socket}\" \"{root}\" {(isOpen ? "true" : "false")}";
+            if (string.IsNullOrWhiteSpace(filePath))
+                throw new ArgumentException("Invalid or non-existent file path");
+
+            if (line <= 0)
+                line = 1;
+
+            if (string.IsNullOrWhiteSpace(terminal))
+                throw new ArgumentException("Terminal must not be empty");
+
+            // Escapa espaços no terminal
+            string safeTerminal = terminal.Replace(" ", "^ ");
+
+            // Garante que o socket e root estão no formato esperado (sem quebras de linha, etc.)
+            string safeSocket = socket?.Trim() ?? "";
+            string safeRoot = root?.Trim() ?? "";
+
+            return $"\"{filePath}\" {line} \"{safeTerminal}\" \"{safeSocket}\" \"{safeRoot}\" {(isOpen ? "true" : "false")}";
         }
-        
+
         //-------------- Others --------------
 
         public static string GetCurrentOS()

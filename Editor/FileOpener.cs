@@ -15,8 +15,6 @@ namespace NvimUnity
 
         public static bool OpenFile(string filePath, int line)
         {
-            if (line < 1) line = 1;
-
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);

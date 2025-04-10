@@ -8,8 +8,6 @@ set "SOCKET=%~4"
 set "ROOT=%~5"
 set "ISPROJECTOPEN=%~6"
 
-if "%LINE%"=="" set "LINE=1"
-
 rem ESC = \x1b (ASCII 27), CR = \r
 set "EDIT_FILE=:e %FILE%\r"
 set "GOTO_LINE=:%LINE%\r"

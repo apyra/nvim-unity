@@ -13,7 +13,7 @@ namespace NvimUnity
 
             try
             {
-                if (FileOpener.OS() == "Windows")
+                if (NeovimEditor.OS() == "Windows")
                 {
                     // Remover o prefixo \\.\pipe\ para passar só o nome do pipe
                     string pipeName = socketPath.Replace(@"\\.\pipe\", "");
