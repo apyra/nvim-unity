@@ -9,13 +9,21 @@ using Debug = UnityEngine.Debug;
 namespace NvimUnity
 {
     [InitializeOnLoad]
-    public class NeovimCodeEditor : IExternalCodeEditor
+    public class NeovimEditor : IExternalCodeEditor
     {
-        private static readonly string editorName = "Neovim Code Editor";
+        public static readonly string App = Utils.GetLauncherPath();
+        public static readonly string OS = Utils.GetCurrentOS();
+        public static readonly string RootFolder = Utils.FindProjectRoot();
+        public static string Terminal = "";
 
-        static NeovimCodeEditor()
+        private static readonly string editorName = "Neovim Editor";
+        private static Config config;
+
+        static NeovimEditor()
         {
-            CodeEditor.Register(new NeovimCodeEditor());
+            CodeEditor.Register(new NeovimEditor());
+            config = Utils.GetConfig();
+            config.terminals.TryGetValue(OS, out Terminal);
         }
 
         public string GetDisplayName() => editorName;
@@ -48,6 +56,18 @@ namespace NvimUnity
             {
                 Utils.RegenerateProjectFiles();
             }
+
+            GUILayout.Label("Terminal Settings", EditorStyles.boldLabel);
+
+            EditorGUILayout.BeginHorizontal();
+            Terminal = EditorGUILayout.TextField($"{OS} Terminal:", Terminal);
+            if (GUILayout.Button("Save"))
+            {
+                config.terminals[OS] = Terminal;
+                Utils.SaveConfig(config);
+                EditorUtility.DisplayDialog("Saved", $"Terminal for {OS} saved!", "OK");
+            }
+            EditorGUILayout.EndHorizontal();
         }
 
         public void Initialize(string editorInstallationPath)
@@ -57,7 +77,7 @@ namespace NvimUnity
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = editorName, Path = FileOpener.LauncherPath }
+            new CodeEditor.Installation { Name = editorName, Path = App }
         };
 
         public void SyncAll()
@@ -73,7 +93,8 @@ namespace NvimUnity
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
-            installation = new CodeEditor.Installation { Name = editorName, Path = FileOpener.LauncherPath };
+            Utils.EnsureLauncherExecutable();
+            installation = new CodeEditor.Installation { Name = editorName, Path = App };
             return true;
         }
     }

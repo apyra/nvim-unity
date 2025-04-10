@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
@@ -11,41 +12,7 @@ namespace NvimUnity
 {
     public static class Utils
     {
-        public static string GetSocketPath()
-        {
-            try
-            {
-                string scriptDir = Path.GetDirectoryName(GetLauncherPath());
-                string configPath = Path.Combine(scriptDir, "config.json");
-
-                if (!File.Exists(configPath))
-                {
-                    //Debug.LogWarning($"[NvimUnity] Config file not found: {configPath}");
-                    return null;
-                }
-
-                string json = File.ReadAllText(configPath);
-
-                // Simples regex para extrair o valor de "socket": "algum_path"
-                Match match = Regex.Match(json, @"""socket""\s*:\s*""([^""]+)""");
-                if (match.Success)
-                {
-                    string rawSocket = match.Groups[1].Value.Trim();
-                    string normalizedSocket = rawSocket.Replace(@"\\", @"\");
-                    return normalizedSocket;
-                }
-                else
-                {
-                    Debug.LogWarning("[NvimUnity] 'socket' not found in config.json");
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"[NvimUnity] Error reading socket from config.json: {e.Message}");
-            }
-
-            return null;
-        }
+        //-------------- Project Methods --------------
 
         public static void RegenerateProjectFiles()
         {
@@ -84,9 +51,11 @@ namespace NvimUnity
             }
         }
 
+        //-------------- Launcher App --------------
+
         public static string GetLauncherPath()
         {
-            string scriptPath = Path.GetFullPath(Utils.NormalizePath("Packages/com.apyra.nvim-unity/Launcher/nvim-open"));
+            string scriptPath = NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Launcher/nvim-open"));
 
 #if UNITY_EDITOR_WIN
             return scriptPath + ".bat";
@@ -119,10 +88,12 @@ namespace NvimUnity
 #endif
         }
 
-        public static string BuildLauncherCommand(string filePath, int line, string socket, string root, bool isOpen)
+        public static string BuildLauncherCommand(string filePath, int line, string terminal, string socket, string root, bool isOpen)
         {
-            return $"\"{filePath}\" {line} \"{socket}\" \"{root}\" {(isOpen ? "true" : "false")}";
+            return $"\"{filePath}\" {line} \"{terminal}\" \"{socket}\" \"{root}\" {(isOpen ? "true" : "false")}";
         }
+        
+        //-------------- Others --------------
 
         public static string GetCurrentOS()
         {
@@ -135,14 +106,23 @@ namespace NvimUnity
 #endif
         }
 
-        public static string FindProjectRoot(string path)
+        public static string FindProjectRoot()
         {
-            var dir = new DirectoryInfo(Path.GetDirectoryName(path));
-            while (dir != null && !Directory.Exists(Path.Combine(dir.FullName, "Assets")))
+            var current = Directory.GetCurrentDirectory();
+
+            while (!string.IsNullOrEmpty(current))
             {
-                dir = dir.Parent;
+                bool hasAssets = Directory.Exists(Path.Combine(current, "Assets"));
+                bool hasLibrary = Directory.Exists(Path.Combine(current, "Library"));
+                bool hasPackages = Directory.Exists(Path.Combine(current, "Packages"));
+
+                if (hasAssets && hasLibrary && hasPackages)
+                    return current;
+
+                current = Directory.GetParent(current)?.FullName;
             }
-            return NormalizePath(dir?.FullName ?? Path.GetDirectoryName(path));
+
+            return null;
         }
 
         public static string NormalizePath(string path)
@@ -153,6 +133,60 @@ namespace NvimUnity
             return path.Replace("\\", "/");
 #endif
         }
+
+        //-------------- Config --------------
+
+        public static string GetConfigPath()
+        {
+            string basePath;
+
+            if (GetCurrentOS() == "Windows")
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nvim-unity");
+            else
+                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "nvim-unity");
+
+            if (!Directory.Exists(basePath))
+                Directory.CreateDirectory(basePath);
+
+            return Path.Combine(basePath, "config.json");
+        }
+
+        public static Config GetConfig()
+        {
+            string path = GetConfigPath();
+
+            if (!File.Exists(path))
+            {
+                // Criar e salvar template padrão
+                var defaultConfig = new Config
+                {
+                    terminals = new Dictionary<string, string>
+                    {
+                        { "Windows", "wt" },
+                        { "Linux", "gnome-terminal" },
+                        { "OSX", "iTerm" }
+                    }
+                };
+
+                SaveConfig(defaultConfig);
+                return defaultConfig;
+            }
+
+            string json = File.ReadAllText(path);
+            return JsonSerializer.Deserialize<Config>(json);
+        }
+
+        public static void SaveConfig(Config config)
+        {
+            string path = GetConfigPath();
+            string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
+            File.WriteAllText(path, json);
+        }
+    }
+
+    public class Config
+    {
+        public Dictionary<string, string> terminals { get; set; }
     }
 }
 

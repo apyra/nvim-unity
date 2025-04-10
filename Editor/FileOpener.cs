@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using UnityEngine;
+using UnityEditor;
+
 using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
     public static class FileOpener
     {
-        public static readonly string LauncherPath = Utils.GetLauncherPath();
-        private static readonly string socket = Utils.GetSocketPath();
-        
+        private static readonly string socket = @"\\.\pipe\nvim-unity";
+
         public static bool OpenFile(string filePath, int line)
         {
             if (line < 1) line = 1;
@@ -19,13 +20,18 @@ namespace NvimUnity
             try
             {
                 string normalizedPath = Utils.NormalizePath(filePath);
-                string root = Utils.FindProjectRoot(filePath);
-                bool isRunniginNeovim = SocketChecker.IsSocketActive(socket);
-                string args = Utils.BuildLauncherCommand(filePath, line, socket, root, isRunniginNeovim);
+                bool isRunnigInNeovim = SocketChecker.IsSocketActive(socket);
+                string args = Utils.BuildLauncherCommand(
+                        filePath, 
+                        line, 
+                        NeovimEditor.Terminal, 
+                        socket, 
+                        NeovimEditor.RootFolder, 
+                        isRunnigInNeovim);
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = LauncherPath,
+                    FileName = NeovimEditor.App,
                     Arguments = args,
                     UseShellExecute = false,
                     CreateNoWindow = true

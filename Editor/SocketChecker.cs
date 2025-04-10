@@ -1,6 +1,5 @@
 using System;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.IO.Pipes;
 
 namespace NvimUnity
@@ -14,7 +13,7 @@ namespace NvimUnity
 
             try
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (FileOpener.OS() == "Windows")
                 {
                     // Remover o prefixo \\.\pipe\ para passar só o nome do pipe
                     string pipeName = socketPath.Replace(@"\\.\pipe\", "");
