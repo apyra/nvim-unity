@@ -124,55 +124,65 @@ namespace NvimUnity
 
         public static string GetConfigPath()
         {
-            string basePath;
+#if UNITY_EDITOR_WIN
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nvim-unity");
+#elif UNITY_EDITOR_OSX
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), "Library/Application Support/nvim-unity");
+#else
+            string folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".config/nvim-unity");
+#endif
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
 
-            if (GetCurrentOS() == "Windows")
-                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "nvim-unity");
-            else
-                basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config", "nvim-unity");
-
-            if (!Directory.Exists(basePath))
-                Directory.CreateDirectory(basePath);
-
-            return Path.Combine(basePath, "config.json");
+            return Path.Combine(folder, "config.json");
         }
 
-        public static Config GetConfig()
+        public static Config LoadConfig()
         {
             string path = GetConfigPath();
 
             if (!File.Exists(path))
             {
-                // Criar e salvar template padrão
-                var defaultConfig = new Config
-                {
-                    terminals = new Dictionary<string, string>
-                    {
-                        { "Windows", "wt" },
-                        { "Linux", "gnome-terminal" },
-                        { "OSX", "iTerm" }
-                    }
-                };
-
-                SaveConfig(defaultConfig);
+                var defaultConfig = new Config();
+                SaveConfig(defaultConfig); // salva o template inicial
                 return defaultConfig;
             }
 
-            string json = File.ReadAllText(path);
-            return JsonSerializer.Deserialize<Config>(json);
+            try
+            {
+                string json = File.ReadAllText(path);
+                return JsonUtility.FromJson<Config>(json);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[nvim-unity] Failed to load config: {e.Message}");
+                return new Config(); // fallback
+            }
         }
 
         public static void SaveConfig(Config config)
         {
-            string path = GetConfigPath();
-            string json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(path, json);
-        }
+            try
+            {
+                string json = JsonUtility.ToJson(config, true);
+                File.WriteAllText(GetConfigPath(), json);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[nvim-unity] Failed to save config: {e.Message}");
+            }
+        }    
     }
 
+    [Serializable]
     public class Config
     {
-        public Dictionary<string, string> terminals { get; set; }
+        public Dictionary<string, string> terminals = new()
+        {
+            { "Windows", "wt" },
+            { "Linux", "gnome-terminal" },
+            { "OSX", "iTerm" }
+        };
     }
 }
 
