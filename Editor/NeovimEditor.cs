@@ -52,13 +52,17 @@ namespace NvimUnity
             var rect = EditorGUI.IndentedRect(EditorGUILayout.GetControlRect());
             rect.width = 252;
 
+            GUILayout.Space(20);
+            GUILayout.Label("Project Files", EditorStyles.boldLabel);
+            GUILayout.Space(20);
+
             if (GUI.Button(rect, "Regenerate project files"))
             {
                 Utils.RegenerateProjectFiles();
             }
-
+            GUILayout.Space(20);
             GUILayout.Label("Terminal Settings", EditorStyles.boldLabel);
-
+            GUILayout.Space(20);
             EditorGUILayout.BeginHorizontal();
             Terminal = EditorGUILayout.TextField($"{OS} Terminal:", Terminal);
             if (GUILayout.Button("Save"))
@@ -68,6 +72,7 @@ namespace NvimUnity
                 EditorUtility.DisplayDialog("Saved", $"Terminal for {OS} saved!", "OK");
             }
             EditorGUILayout.EndHorizontal();
+            GUILayout.Space(20);
         }
 
         public void Initialize(string editorInstallationPath)
