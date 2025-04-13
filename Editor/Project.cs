@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Xml.Linq;
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +15,18 @@ namespace NvimUnity
     {
         private static string ProjectRoot => NeovimEditor.RootFolder;
         private static string TemplatesPath => Utils.NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Editor/Templates"));
+
+        private static string csprojPath;
+ 
+        static Project ()
+        {
+            csprojPath = Path.Combine(ProjectRoot, "Assembly-CSharp.csproj");
+        }
+
+        public static bool Exists()
+        {
+           return File.Exists(csprojPath);
+        }
 
         public static void GenerateAll()
         {
@@ -48,56 +61,97 @@ namespace NvimUnity
                 return;
             }
 
-            string outputPath = Path.Combine(ProjectRoot, "Assembly-CSharp.csproj");
-
             string templateContent = File.ReadAllText(templateFullPath);
 
             string analyzersGroup = GenerateAnalyzersItemGroup();
             string generateProject = GenerateGeneratorProjectGroup();
-            string compileIncludes = GenerateCompileIncludes();
             string referenceIncludes = GenerateReferenceIncludes();
 
             string finalContent = templateContent
                 .Replace("{{ANALYZERS}}",analyzersGroup)
                 .Replace("{{GENERATE_PROJECT_GROUP}}", generateProject) 
-                .Replace("{{COMPILE_INCLUDES}}", compileIncludes)
                 .Replace("{{REFERENCES}}", referenceIncludes)
                 .Replace("\r\n", "\n"); // força LF
 
-            File.WriteAllText(outputPath, finalContent, new UTF8Encoding(false));
+            File.WriteAllText(csprojPath, finalContent, new UTF8Encoding(false));
+
+            GenerateCompileIncludes();
         }
 
-        public static string GenerateAnalyzersItemGroup()
+        public static void GenerateCompileIncludes()
+        {
+            var xml = XDocument.Load(csprojPath);
+            var ns = xml.Root.Name.Namespace;
+
+            string rawXml = File.ReadAllText(csprojPath);
+            bool hasPlaceholder = rawXml.Contains("<!-- {{COMPILE_INCLUDES}} -->");
+
+            // Gera os caminhos relativos de todos os arquivos .cs dentro de Assets/
+            var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
+            var compileElements = files.Select(file =>
+            {
+                string relativePath = "Assets" + file.Substring(Application.dataPath.Length);
+                return new XElement(ns + "Compile", new XAttribute("Include", Utils.NormalizePath(relativePath)));
+            }).ToList();
+
+            XElement itemGroup = null;
+
+            if (hasPlaceholder)
+            {
+                itemGroup = xml.Root.Elements(ns + "ItemGroup")
+                    .FirstOrDefault(g => g.Nodes().OfType<XComment>().Any(c => c.Value.Contains("{{COMPILE_INCLUDES}}")));
+
+                if (itemGroup != null)
+                {
+                    // Remove todas as tags <Compile> existentes
+                    itemGroup.Elements(ns + "Compile").Remove();
+
+                    // Adiciona as novas
+                    foreach (var compile in compileElements)
+                        itemGroup.Add(compile);
+                }
+            }
+            else
+            {
+                // Cria novo ItemGroup com o comentário placeholder e as tags <Compile>
+                itemGroup = new XElement(ns + "ItemGroup",
+                    new XComment(" {{COMPILE_INCLUDES}} ")
+                );
+
+                foreach (var compile in compileElements)
+                    itemGroup.Add(compile);
+
+                // Insere como o 10º filho direto de <Project>, ou no final se não tiver 10
+                var projectChildren = xml.Root.Elements().ToList();
+                if (projectChildren.Count >= 10)
+                    projectChildren[9].AddBeforeSelf(itemGroup);
+                else
+                    xml.Root.Add(itemGroup);
+            }
+
+            xml.Save(csprojPath);
+        }
+
+        private static string GenerateAnalyzersItemGroup()
         {
             var unityPath = EditorApplication.applicationPath; // Ex: C:\Program Files\Unity\Hub\Editor\6000.0.23f1\Editor\Unity.exe
             var editorDir = Path.GetDirectoryName(unityPath);  // ...\Editor
             var dataDir = Path.Combine(editorDir, "Data");
             var toolsDir = Path.Combine(dataDir, "Tools", "Unity.SourceGenerators");
 
-            // Lista dos DLLs de analyzer que queremos incluir
-            var analyzers = new[]
-            {
-                "Unity.SourceGenerators.dll",
-                "Unity.Properties.SourceGenerator.dll",
-                "Unity.UIToolkit.SourceGenerator.dll"
-            };
-
             var sb = new StringBuilder();
 
-            foreach (var analyzer in analyzers)
+            if (Directory.Exists(toolsDir))
             {
-                var fullPath = Path.Combine(toolsDir, analyzer);
-                if (File.Exists(fullPath))
+                var dlls = Directory.GetFiles(toolsDir, "*.dll", SearchOption.TopDirectoryOnly);
+
+                foreach (var dll in dlls)
                 {
-                    sb.AppendLine($"    <Analyzer Include=\"{fullPath}\" />");
-                }
-                else
-                {
-                    Debug.LogWarning($"Analyzer not found: {fullPath}");
+                    sb.AppendLine($"    <Analyzer Include=\"{dll}\" />");
                 }
             }
-      
-            return sb.ToString().Replace("\r\n", "\n").Replace("\r", "").TrimEnd('\n');                }
+            return sb.ToString().Replace("\r\n", "\n").Replace("\r", "").TrimEnd('\n');
+        }
 
         private static string GenerateGeneratorProjectGroup()
         {
@@ -134,19 +188,6 @@ namespace NvimUnity
             return sb.ToString().Replace("\r\n", "\n").Replace("\r", "").TrimEnd('\n');
         }
 
-        private static string GenerateCompileIncludes()
-        {
-            var sb = new StringBuilder();
-            var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
-
-            foreach (var file in files)
-            {
-                // Remove o caminho absoluto até "Assets/" e normaliza para usar "/" como separador
-                string relativePath = "Assets" + file.Substring(Application.dataPath.Length);
-                sb.AppendLine($"    <Compile Include=\"{Utils.NormalizePath(relativePath)}\" />");
-            }
-            return sb.ToString().Replace("\r\n", "\n").Replace("\r", "").TrimEnd('\n');         }
-
         private static string GenerateReferenceIncludes()
         {
             var sb = new StringBuilder();
@@ -175,7 +216,7 @@ namespace NvimUnity
                 }
             }
 
-            // Agora adiciona manualmente os .dll de Library/ScriptAssemblies
+            // Adiciona manualmente os .dll de Library/ScriptAssemblies
             string assembliesDir = Path.Combine(Directory.GetCurrentDirectory(), "Library", "ScriptAssemblies");
             if (Directory.Exists(assembliesDir))
             {
@@ -184,7 +225,16 @@ namespace NvimUnity
                     string name = Path.GetFileNameWithoutExtension(dll);
                     if (!added.Contains(name)) // Evita duplicar
                     {
-                        string hintPath = Utils.NormalizePath(dll);
+                        string normalizedPath = Utils.NormalizePath(dll);
+
+                        // Garante que HintPath comece com "Library\..."
+                        string hintPath;
+                        var index = normalizedPath.IndexOf("Library" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+                        if (index >= 0)
+                            hintPath = normalizedPath.Substring(index);
+                        else
+                            hintPath = normalizedPath; // fallback, caso algo estranho aconteça
+
                         sb.AppendLine($@"    <Reference Include=""{name}"">");
                         sb.AppendLine($@"      <HintPath>{hintPath}</HintPath>");
                         sb.AppendLine($@"      <Private>False</Private>");
@@ -195,6 +245,7 @@ namespace NvimUnity
 
             return sb.ToString().Replace("\r\n", "\n").TrimEnd('\n');
         }
-    }
+   
+    } 
 }
 

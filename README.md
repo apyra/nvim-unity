@@ -24,10 +24,12 @@ This Unity package integrates Neovim as an external script editor and provides a
 ```json
 https://github.com/apyra/nvim-unity.git
 ```
-2. Unity will auto-detect the editor as **"Neovim (Unity)"** in `External Tools`:
+2. Unity will auto-detect the editor as **"Neovim Code Editor"** in `External Tools`:
 
 - Go to `Edit > Preferences > External Tools`
-- Select **Neovim (Unity)** (no need to browse for `.exe`)
+- Select **Neovim Code Editor** (no need to browse for `.exe`)
+
+---
 
 ### Neovim (Lua)
 
@@ -44,21 +46,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
   end,
 }
 ```
-
-### `config.json`
-A `config.json` file is already included at `Packages/com.apyra.nvim-unity/Launcher/config.json`.  
-You can edit it to match your preferred terminal for each OS:
-```json
-{
-  "terminals": {
-    "Windows": "wt",
-    "Linux": "gnome-terminal",
-    "OSX": "iTerm"
-  }
-}
-```
-This tells the launcher which terminal to use per OS. You can use any terminal you want (e.g., `alacritty`, `kitty`, etc).
-
 ---
 
 ## Usage
@@ -69,14 +56,17 @@ This tells the launcher which terminal to use per OS. You can use any terminal y
 
 ### Regenerate Project Files
 - From Unity: `Preferences > External Tools > Regenerate Project Files`
-- From Assets Menu: `Assets > NvimUnity > Regenerate Project Files`
-- From Neovim: ([nvim-unity-handle]("https://github.com/apyra/nvim-unity-handle.git"))`:Uregenerate`
+- From Assets Menu: `Tools > Neovim Code Editor > Regenerate Project Files`
+
+### Custom Terminal
+
+*If you want to run nvim from a custom terminal you can set it here. In windows for example if you run nvim directly, it may not showup very well because the current user will not be bound to it.
+
+![Custom Terminal Preferences](Documentation/ExternalTools.png)
 
 ---
 
 ## 🧠 Recommended Configuration
-
-This works best with:
 
 - [Neovim](https://neovim.io/) *(required)*
 - [NvChad](https://nvchad.com/) as your Neovim base, with:
@@ -91,7 +81,7 @@ This works best with:
 
 ### 🔧 LSP Setup for C#
 
-Install `omnisharp` using [mason.nvim](https://github.com/williamboman/mason.nvim):
+Install `omnisharp` using [mason.nvim](https://github.com/williamboman/mason.nvim), it requires .Net installed.
 
 ```lua
 local lspconfig = require("lspconfig")
@@ -114,11 +104,11 @@ lspconfig.omnisharp.setup {
 }
 ```
 
-> ⚠️ Omnisharp requires `.csproj` or `.sln` in the root folder — make sure to use "Regenerate Project Files" if missing. *It takes some seconds to attach to your current buffer
+> ⚠️ Omnisharp requires `.csproj` and `.sln` in the root folder — make sure to use "Regenerate Project Files" if missing. *It may take a second or two to attach into your working buffer.
 
 ---
 
-### 🌲 Treesitter Setup
+### 🌲 Treesitter Setup 
 
 ```lua
 {
@@ -167,18 +157,6 @@ use {
     -- Optional config
   end
 }
-```
-
----
-
-### ⚙️ Editor Options (Optional)
-
-```lua
-local o = vim.o
-o.expandtab = true
-o.smartindent = true
-o.tabstop = 2
-o.shiftwidth = 4
 ```
 
 ---

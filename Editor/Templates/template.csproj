@@ -54,7 +54,8 @@
 {{ANALYZERS}}
   </ItemGroup>
   <ItemGroup>
-{{COMPILE_INCLUDES}}
+<!-- Auto-generated block: do not modify manually or remove these commented lines -->
+<!-- {{COMPILE_INCLUDES}} -->
   </ItemGroup>
   <ItemGroup>
 {{REFERENCES}}

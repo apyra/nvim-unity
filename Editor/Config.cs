@@ -8,7 +8,7 @@ namespace NvimUnity
     [Serializable]
     public class Config
     {
-        public bool use_custom_terminal = true;
+        public bool use_custom_terminal = false;
         public Dictionary<string, string> terminals = new()
         {
             { "Windows", "wt" },

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Unity.CodeEditor;
@@ -11,50 +12,50 @@ namespace NvimUnity
     [InitializeOnLoad]
     public class NeovimEditor : IExternalCodeEditor
     {
-        public static string App => EditorPrefs.GetString("kScriptsDefaultApp");
-        public static string Terminal = "";
+        public static string defaultApp => EditorPrefs.GetString("kScriptsDefaultApp");
         public static string OS = Utils.GetCurrentOS();
         public static string RootFolder = Utils.GetProjectRoot();
 
-        private static bool UseCustomTerminal = false;
-        
+        private static Config config;
+        private static bool needSaveConfig = false;
+        private static bool useCustomTerminal = false;
+        public static string Terminal = "";
+
         private static string EditorName = "Neovim Code Editor";
         private static string Socket = @"\\.\pipe\nvim-unity2025";
-        private static Config config;
 
         static NeovimEditor()
         {
             CodeEditor.Register(new NeovimEditor());
             config = ConfigManager.LoadConfig();
             config.terminals.TryGetValue(OS, out Terminal);
-            UseCustomTerminal = config.use_custom_terminal;
+            useCustomTerminal = config.use_custom_terminal;
         }
 
         public string GetDisplayName() => EditorName;
 
-        private static bool IsNvimUnityDefaultEditor()
+        public static bool IsNvimUnityDefaultEditor()
         {
-            return  string.Equals(App,Utils.GetLauncherPath());
+            return  string.Equals(defaultApp,Utils.GetLauncherPath());
         }
 
         public bool OpenProject(string path, int line, int column)
         {
             if (string.IsNullOrEmpty(path) || !IsNvimUnityDefaultEditor()) return false;
+           
             bool IsRunnigInNeovim = SocketChecker.IsSocketActive(Socket);
 
             if( line<=0 ) line = 1;
 
             if(!IsRunnigInNeovim)
             {
-                bool openRoot =true;
-
                 string nvimArgs = $"--listen \"{Socket}\" \"+cd {RootFolder}\" \"+{line}\" {path}";
                 string usingApp;
                 string args = nvimArgs;
 
-                if(UseCustomTerminal)
+                if(useCustomTerminal)
                 {
-                    usingApp = App;
+                    usingApp = defaultApp;
                     string safeTerminal = Terminal.Replace(" ", "^ ");
 
                     if(string.IsNullOrEmpty(safeTerminal))
@@ -69,8 +70,6 @@ namespace NvimUnity
                 {
                     usingApp = Utils.GetNeovimPath();
                 }
-
-                Debug.Log($"Sending args: {args}");
 
                 try
                 {
@@ -135,29 +134,27 @@ namespace NvimUnity
 
             if (GUILayout.Button("Regenerate project files"))
             {
-                Project.GenerateAll();
+                SyncAll();
             }
 
             EditorGUILayout.EndHorizontal();
-
-            // Opção config.use_custom_terminal
 
             GUILayout.Space(10);
             GUILayout.Label("Terminal Settings", EditorStyles.boldLabel);
             GUILayout.Space(10);
 
-            var prevValue = UseCustomTerminal;
+            var prevValue = useCustomTerminal;
             var newValue = EditorGUILayout.Toggle(new GUIContent("Use a custom terminal", 
                         "Let you choose a terminal to run neovim with"), prevValue);
             
             if (newValue != prevValue)
             {
-                UseCustomTerminal = newValue;
-                config.use_custom_terminal = UseCustomTerminal;
-                ConfigManager.SaveConfig(config);
+                useCustomTerminal = newValue;
+                config.use_custom_terminal = useCustomTerminal;
+                needSaveConfig = true;
             }
 
-            if(UseCustomTerminal)
+            if(useCustomTerminal)
             {
                 EditorGUILayout.BeginHorizontal();
                 Terminal = EditorGUILayout.TextField($"{OS} Terminal:", Terminal);
@@ -183,14 +180,36 @@ namespace NvimUnity
 
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = EditorName, Path = App }
+            new CodeEditor.Installation { Name = EditorName, Path = defaultApp }
         };
 
-        public void SyncAll() {}
+        public void SyncAll() {
+            Project.GenerateAll();
+        }
 
         public void SyncIfNeeded(string[] addedFiles, string[] deletedFiles, string[] movedFiles, string[] movedFromFiles, string[] importedFiles)
         {
-            Project.GenerateProject();
+            if (!Project.Exists())
+            {
+                SyncAll();
+                return;
+            }
+
+            // Verifica se há algum arquivo .cs dentro da pasta Assets
+            bool hasCsInAssets =
+            addedFiles.Concat(deletedFiles)
+                      .Concat(movedFiles)
+                      .Concat(movedFromFiles)
+                      .Concat(importedFiles)
+                      .Any(path =>
+                          path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
+                          path.Replace('\\', Path.DirectorySeparatorChar)
+                              .Contains("Assets" + Path.DirectorySeparatorChar));
+
+            if (hasCsInAssets)
+            {
+                Project.GenerateCompileIncludes();
+            }
         }
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
@@ -198,6 +217,15 @@ namespace NvimUnity
             Utils.EnsureLauncherExecutable();
             installation = new CodeEditor.Installation { Name = EditorName, Path = Utils.GetLauncherPath() };
             return true;
+        }
+
+        public void Save()
+        {
+            if(needSaveConfig)
+            {
+                ConfigManager.SaveConfig(config);           
+                needSaveConfig = false;
+            }
         }
     }
 }
