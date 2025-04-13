@@ -4,11 +4,11 @@ namespace NvimUnity
 {
     public static class NeovimMenu
     {
-        [MenuItem("Assets/NvimUnity/Regenerate Project Files")]
+        [MenuItem("Assets/Neovim Code Editor/Regenerate Project Files")]
         public static void RegenerateProjectFiles()
         {
-            AssetDatabase.Refresh();
-            Utils.RegenerateProjectFiles();
+            //AssetDatabase.Refresh();
+            Project.GenerateAll();
             //UnityEngine.Debug.Log("Project files regenerated.");
         }
     

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
@@ -12,46 +11,49 @@ namespace NvimUnity
 {
     public static class Utils
     {
-        //-------------- Project Methods --------------
-
-        public static void RegenerateProjectFiles()
+        public static string GetCurrentOS()
         {
-            var editorAssembly = typeof(UnityEditor.Editor).Assembly;
-            var syncVS = editorAssembly.GetType("UnityEditor.SyncVS");
-
-            if (syncVS != null)
-            {
-                var syncMethod = syncVS.GetMethod("SyncSolution", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-                if (syncMethod != null)
-                {
-                    syncMethod.Invoke(null, null);
-                    AssetDatabase.Refresh();
-                    CleanExtraCsprojFiles();
-                }
-            }
+#if UNITY_EDITOR_WIN
+            return "Windows";
+#elif UNITY_EDITOR_OSX
+            return "OSX";
+#else
+            return "Linux";
+#endif
         }
 
-        private static void CleanExtraCsprojFiles()
+        public static string GetUnityInstallRoot()
         {
-            string root = Directory.GetCurrentDirectory();
-            string[] allCsproj = Directory.GetFiles(root, "*.csproj", SearchOption.TopDirectoryOnly);
-
-            var keep = new[]
-            {
-                "Assembly-CSharp.csproj",
-                $"{new DirectoryInfo(root).Name}.csproj"
-            };
-
-            foreach (string file in allCsproj)
-            {
-                if (!keep.Contains(Path.GetFileName(file)))
-                {
-                    File.Delete(file);
-                }
-            }
+            string editorExe = EditorApplication.applicationPath;
+            string editorDir = Path.GetDirectoryName(editorExe);
+            string root = Path.GetDirectoryName(editorDir); // sobe da pasta Editor/
+            return root;
         }
 
-        //-------------- Launcher App --------------
+        public static string GetProjectRoot()
+        {
+            return Path.GetDirectoryName(Application.dataPath);
+        }
+
+        public static string NormalizePath(string path)
+        {
+#if UNITY_EDITOR_WIN
+            return path.Replace("/", "\\");
+#else
+            return path.Replace("\\", "/");
+#endif
+        }
+
+        //-------------- Launcher --------------
+
+        public static string GetNeovimPath()
+        {
+#if UNITY_EDITOR_WIN
+                return @"C:\Program Files\Neovim\bin\nvim.exe"; // Windows
+#else
+                return "/usr/bin/nvim"; // Linux/macOS
+#endif
+        }
 
         public static string GetLauncherPath()
         {
@@ -85,54 +87,6 @@ namespace NvimUnity
             {
                 Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
             }
-#endif
-        }
-
-        public static string BuildLauncherCommand(string filePath, int line, string terminal, string socket, string root, bool isOpen)
-        {
-            if (string.IsNullOrWhiteSpace(filePath))
-                throw new ArgumentException("Invalid or non-existent file path");
-
-            if (line <= 0)
-                line = 1;
-
-            if (string.IsNullOrWhiteSpace(terminal))
-                throw new ArgumentException("Terminal must not be empty");
-
-            // Escapa espaços no terminal
-            string safeTerminal = terminal.Replace(" ", "^ ");
-
-            // Garante que o socket e root estão no formato esperado (sem quebras de linha, etc.)
-            string safeSocket = socket?.Trim() ?? "";
-            string safeRoot = root?.Trim() ?? "";
-
-            return $"\"{filePath}\" {line} \"{safeTerminal}\" \"{safeSocket}\" \"{safeRoot}\" {(isOpen ? "true" : "false")}";
-        }
-
-        //-------------- Others --------------
-
-        public static string GetCurrentOS()
-        {
-#if UNITY_EDITOR_WIN
-            return "Windows";
-#elif UNITY_EDITOR_OSX
-            return "OSX";
-#else
-            return "Linux";
-#endif
-        }
-
-        public static string FindProjectRoot()
-        {
-            return NormalizePath(Path.GetDirectoryName(Application.dataPath));
-        }
-
-        public static string NormalizePath(string path)
-        {
-#if UNITY_EDITOR_WIN
-            return path.Replace("/", "\\");
-#else
-            return path.Replace("\\", "/");
 #endif
         }
 
@@ -188,17 +142,6 @@ namespace NvimUnity
                 Debug.LogError($"[nvim-unity] Failed to save config: {e.Message}");
             }
         }    
-    }
-
-    [Serializable]
-    public class Config
-    {
-        public Dictionary<string, string> terminals = new()
-        {
-            { "Windows", "wt" },
-            { "Linux", "gnome-terminal" },
-            { "OSX", "iTerm" }
-        };
     }
 }
 
