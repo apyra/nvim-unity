@@ -33,13 +33,13 @@ https://github.com/apyra/nvim-unity.git
 
 ### Neovim (Lua)
 
-### 🔁 File Sync with [nvim-unity-handle](https://github.com/apyra/nvim-unity-handle)
+### 🔁 File Sync with [nvim-unity-sync](https://github.com/apyra/nvim-unity-sync)
 
 This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` files in nvim even if Unity is closed:
 
 ```lua
 {
-  "apyra/nvim-unity-handle",
+  "apyra/nvim-unity-sync",
   lazy = false,
   config = function()
     require("unity.plugin").setup()
