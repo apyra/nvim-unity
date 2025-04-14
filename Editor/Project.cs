@@ -17,16 +17,20 @@ namespace NvimUnity
         private static string TemplatesPath => Utils.NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Editor/Templates"));
 
         private static string csprojPath;
+        private static HashSet<string> toCompile = new HashSet<string>(); 
  
         static Project ()
         {
             csprojPath = Path.Combine(ProjectRoot, "Assembly-CSharp.csproj");
+            if(Exists())
+            GetCompileIncludes();
         }
 
         public static bool Exists()
         {
            return File.Exists(csprojPath);
         }
+
 
         public static void GenerateAll()
         {
@@ -57,7 +61,7 @@ namespace NvimUnity
 
             if (!File.Exists(templateFullPath))
             {
-                UnityEngine.Debug.LogError($"[NvimUnity] Template not found at {templateFullPath}");
+                Debug.LogError($"[NvimUnity] Template not found at {templateFullPath}");
                 return;
             }
 
@@ -78,9 +82,37 @@ namespace NvimUnity
             GenerateCompileIncludes();
         }
 
+        public static bool HasFilesBeenDeletedOrMoved()
+        {
+            return toCompile.Any(file => !AssetDatabase.AssetPathExists(file));
+        }
+
+        public static bool NeedRegenerateCompileIncludes(List<string> files)
+        {
+            return files.Any(file => !toCompile.Contains(file));        
+        }
+
+        public static void GetCompileIncludes()
+        {
+            var xml = XDocument.Load(csprojPath);
+            var ns = xml.Root.Name.Namespace;
+
+            toCompile.Clear(); // limpa o cache atual
+
+            foreach (var compile in xml.Descendants(ns + "Compile"))
+            {
+                var includeAttr = compile.Attribute("Include");
+                if (includeAttr != null)
+                {
+                    toCompile.Add(includeAttr.Value);
+                }
+            }
+        }
+
         public static void GenerateCompileIncludes()
         {
-            Debug.Log("Regenerating compile tags");
+            toCompile.Clear();
+
             var xml = XDocument.Load(csprojPath);
             var ns = xml.Root.Name.Namespace;
 
@@ -91,8 +123,9 @@ namespace NvimUnity
             var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
             var compileElements = files.Select(file =>
             {
-                string relativePath = "Assets" + file.Substring(Application.dataPath.Length);
-                return new XElement(ns + "Compile", new XAttribute("Include", Utils.NormalizePath(relativePath)));
+                string relativePath = Utils.NormalizePath("Assets" + file.Substring(Application.dataPath.Length));
+                toCompile.Add(relativePath);
+                return new XElement(ns + "Compile", new XAttribute("Include", relativePath));
             }).ToList();
 
             XElement itemGroup = null;
@@ -191,6 +224,7 @@ namespace NvimUnity
 
         private static string GenerateReferenceIncludes()
         {
+
             var sb = new StringBuilder();
 
             var assemblies = CompilationPipeline.GetAssemblies();

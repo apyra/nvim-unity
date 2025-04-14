@@ -44,6 +44,11 @@ namespace NvimUnity
 #endif
         }
 
+        public static bool IsInAssetsFolder(string path)
+        {
+            return path.Replace('\\', '/').Contains("Assets/");
+        }
+
         //-------------- Launcher --------------
 
         public static string GetNeovimPath()

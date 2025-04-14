@@ -223,6 +223,12 @@ return {
 }
 ```
 
+## 🛠️ Known Issues
+
+When you create, delete, or move scripts in Unity, synchronization with the default code editor only happens after the compilation process. So if you open a script before it has been included in the .csproj, you won’t have LSP goodies like code completion.
+
+The best and fastest workflow, first open your project in unity it will automatically generates the .csproj for you. If you don't want to wait for compilation, create .cs files directly in Neovim (e.g., using nvim-tree or an LSP action like "move to its own file") with *[nvim-unity-sync]("https://github.com/apyra/nvim-unity-sync") installed. And if for some reason any script is not included in the project, run :Usync to sync all .cs files in the Assets folder. Once you have the .csproj already generated, you can edit your code without Unity if you wish.
+
 ## ⚡ Final Note
 
 Neovim is a blazing-fast editor. With NvChad + LSP + this Unity integration, it becomes a powerful Unity dev environment.

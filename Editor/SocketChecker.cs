@@ -36,7 +36,7 @@ namespace NvimUnity
                     return sock.Connected;
                 }
             }
-            catch (Exception e)
+            catch            
             {
                 return false;
             }

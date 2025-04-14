@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using UnityEditor;
@@ -51,7 +52,7 @@ namespace NvimUnity
             {
                 string nvimArgs = $"--listen \"{Socket}\" \"+lcd {RootFolder}\" \"+{line}\" {path}";
                 string usingApp = defaultApp;
-                string args = nvimArgs;
+                string fullArgs = nvimArgs;
 
                 if(useCustomTerminal)
                 {
@@ -64,7 +65,7 @@ namespace NvimUnity
                         return false;
                     }
 
-                    args = $"\"{Terminal}\" {nvimArgs}";
+                    fullArgs = $"\"{Terminal}\" {nvimArgs}";
                 }
                 else
                 {
@@ -76,7 +77,7 @@ namespace NvimUnity
                     var psi = new ProcessStartInfo
                     {
                         FileName = usingApp,
-                        Arguments = args,
+                        Arguments = fullArgs,
                         UseShellExecute = false,
                         CreateNoWindow = true,
                     };
@@ -182,6 +183,7 @@ namespace NvimUnity
         };
 
         public void SyncAll() {
+            AssetDatabase.Refresh();
             Project.GenerateAll();
         }
 
@@ -193,20 +195,23 @@ namespace NvimUnity
                 return;
             }
 
-            // Verifica se há algum arquivo .cs dentro da pasta Assets
+            if(Project.HasFilesBeenDeletedOrMoved())
+            {
+                Project.GenerateCompileIncludes();
+                return;
+            }
+
+            var fileList = addedFiles.Concat(importedFiles);
+
             bool hasCsInAssets =
-            addedFiles.Concat(deletedFiles)
-                      .Concat(movedFiles)
-                      .Concat(movedFromFiles)
-                    //  .Concat(importedFiles)
-                      .Any(path =>
-                          path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
-                          path.Replace('\\', Path.DirectorySeparatorChar)
-                              .Contains("Assets" + Path.DirectorySeparatorChar));
+            fileList.Any(path =>
+                    path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
+                    Utils.IsInAssetsFolder(path));
 
             if (hasCsInAssets)
             {
-                Project.GenerateCompileIncludes();
+                if(Project.NeedRegenerateCompileIncludes(fileList.ToList()))
+                    Project.GenerateCompileIncludes();
             }
         }
 
