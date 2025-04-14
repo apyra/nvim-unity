@@ -1,6 +1,7 @@
 using System;
 using System.Net.Sockets;
 using System.IO.Pipes;
+using UnityEngine; // Pra usar Debug.Log
 
 namespace NvimUnity
 {
@@ -9,28 +10,33 @@ namespace NvimUnity
         public static bool IsSocketActive(string socketPath)
         {
             if (string.IsNullOrWhiteSpace(socketPath))
+            {
                 return false;
+            }
 
             try
             {
                 if (NeovimEditor.OS == "Windows")
                 {
-                    // Remover o prefixo \\.\pipe\ para passar só o nome do pipe
-                    string pipeName = socketPath.Replace(@"\\.\pipe\", "");
-
-                    using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut);
-                    client.Connect(100); // timeout em milissegundos
-                    return true;
+                    string pipeName = socketPath.Replace(@"\\.\pipe\", "").Replace(@"\", "");
+                    using var client = new NamedPipeClientStream(".", pipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                    client.Connect(100);
+                    return client.IsConnected;
                 }
                 else
                 {
+                    if (!System.IO.File.Exists(socketPath))
+                    {
+                        return false;
+                    }
+
                     var endPoint = new UnixDomainSocketEndPoint(socketPath);
-                    using var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.IP);
+                    using var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
                     sock.Connect(endPoint);
-                    return true;
+                    return sock.Connected;
                 }
             }
-            catch
+            catch (Exception e)
             {
                 return false;
             }

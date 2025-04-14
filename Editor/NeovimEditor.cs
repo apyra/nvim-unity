@@ -28,7 +28,7 @@ namespace NvimUnity
         {
             CodeEditor.Register(new NeovimEditor());
             config = ConfigManager.LoadConfig();
-            config.terminals.TryGetValue(OS, out Terminal);
+            Terminal = config.GetResolvedTerminalForPlatform(OS); 
             useCustomTerminal = config.use_custom_terminal;
         }
 
@@ -49,8 +49,8 @@ namespace NvimUnity
 
             if(!IsRunnigInNeovim)
             {
-                string nvimArgs = $"--listen \"{Socket}\" \"+cd {RootFolder}\" \"+{line}\" {path}";
-                string usingApp;
+                string nvimArgs = $"--listen \"{Socket}\" \"+lcd {RootFolder}\" \"+{line}\" {path}";
+                string usingApp = defaultApp;
                 string args = nvimArgs;
 
                 if(useCustomTerminal)
@@ -92,24 +92,22 @@ namespace NvimUnity
             }
             else
             {
-                return OpenFileAtLine(path, line);
+                return OpenFile(path, line);
             }
         }
 
-        public bool OpenFileAtLine(string filePath, int line)
+        public bool OpenFile(string filePath, int line)
         {
-            if (!IsNvimUnityDefaultEditor()) return false;
-            
             try
             {
                 string cmd = $"<Esc>:e {filePath}<CR>{line}G";
-                string args = $"--server {Socket} --remote-send \"{cmd}\"";
-                string neovimPath = Utils.GetNeovimPath();
+                string nvimArgs = $"--server {Socket} --remote-send \"{cmd}\"";
+                string nvimPath = Utils.GetNeovimPath();
 
                 var psi = new ProcessStartInfo
                 {
-                    FileName = neovimPath,
-                    Arguments = args,
+                    FileName = nvimPath,
+                    Arguments = nvimArgs,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 };
@@ -161,7 +159,7 @@ namespace NvimUnity
                 
                 if (GUILayout.Button("Save"))
                 {
-                    config.terminals[OS] = Terminal;
+                    config.SetTerminalForPlatform(OS,Terminal);
 
                     ConfigManager.SaveConfig(config);
                     EditorUtility.DisplayDialog("Saved", $"Terminal for {OS} saved!", "OK");
@@ -200,7 +198,7 @@ namespace NvimUnity
             addedFiles.Concat(deletedFiles)
                       .Concat(movedFiles)
                       .Concat(movedFromFiles)
-                      .Concat(importedFiles)
+                    //  .Concat(importedFiles)
                       .Any(path =>
                           path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
                           path.Replace('\\', Path.DirectorySeparatorChar)

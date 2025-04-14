@@ -1,8 +1,9 @@
+![Nvim Unity Banner](Documentation/Banner.png)
+
 # NvimUnity
 
 This Unity package integrates Neovim as an external script editor and provides a **Regenerate Project Files** button inside the Unity Editor.
 
----
 
 ## 🧩 Features
 
@@ -13,7 +14,6 @@ This Unity package integrates Neovim as an external script editor and provides a
 - 🔥 Zero dependency on `nvr` (Neovim Remote)
 - 🖥️ Cross-platform support (Windows, Linux, macOS)
 
----
 
 ## 📂 Installation
 
@@ -29,7 +29,6 @@ https://github.com/apyra/nvim-unity.git
 - Go to `Edit > Preferences > External Tools`
 - Select **Neovim Code Editor** (no need to browse for `.exe`)
 
----
 
 ### Neovim (Lua)
 
@@ -46,7 +45,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
   end,
 }
 ```
----
 
 ## Usage
 
@@ -56,7 +54,7 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
 
 ### Regenerate Project Files
 - From Unity: `Preferences > External Tools > Regenerate Project Files`
-- From Assets Menu: `Tools > Neovim Code Editor > Regenerate Project Files`
+- From Tools Menu: `Tools > Neovim Code Editor > Regenerate Project Files`
 
 ### Custom Terminal
 
@@ -64,7 +62,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
 
 ![Custom Terminal Preferences](Documentation/ExternalTools.png)
 
----
 
 ## 🧠 Recommended Configuration
 
@@ -77,7 +74,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
   - GitSigns  
   - Tabs for multi-file editing
 
----
 
 ### 🔧 LSP Setup for C#
 
@@ -106,7 +102,6 @@ lspconfig.omnisharp.setup {
 
 > ⚠️ Omnisharp requires `.csproj` and `.sln` in the root folder — make sure to use "Regenerate Project Files" if missing. *It may take a second or two to attach into your working buffer.
 
----
 
 ### 🌲 Treesitter Setup 
 
@@ -123,7 +118,6 @@ lspconfig.omnisharp.setup {
 
 Then run `:TSInstall` in Neovim.
 
----
 
 ### 🤖 Copilot (Optional)
 
@@ -146,8 +140,6 @@ map("i", "<C-l>", function()
 end, { desc = "Copilot Accept", noremap = true, silent = true })
 ```
 
----
-
 ### 🧬 Vim Fugitive for Git (Optional)
 
 ```lua
@@ -159,8 +151,6 @@ use {
 }
 ```
 
----
-
 ### 📁 Folding with [nvim-ufo](https://github.com/kevinhwang91/nvim-ufo) (Optional)
 
 ```lua
@@ -169,8 +159,6 @@ use {
   -- your config here
 }
 ```
-
----
 
 ## 🧩 Unity Snippets
 
@@ -235,19 +223,13 @@ return {
 }
 ```
 
----
-
 ## ⚡ Final Note
 
 Neovim is a blazing-fast editor. With NvChad + LSP + this Unity integration, it becomes a powerful Unity dev environment.
 
----
-
 ## 🧑 Contributing
 
 PRs, issues, ideas welcome! This project is evolving – help shape it 🚀
-
----
 
 ## 📄 License
 

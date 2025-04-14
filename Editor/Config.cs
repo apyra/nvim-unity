@@ -6,15 +6,70 @@ using UnityEngine;
 namespace NvimUnity
 {
     [Serializable]
+    public class TerminalEntry
+    {
+        public string platform;
+        public string command;
+    }
+
+    [Serializable]
     public class Config
     {
         public bool use_custom_terminal = false;
-        public Dictionary<string, string> terminals = new()
+
+        public List<TerminalEntry> terminals = new()
         {
-            { "Windows", "wt" },
-            { "Linux", "gnome-terminal" },
-            { "OSX", "iTerm" }
+            new TerminalEntry { platform = "Windows", command = "wt" },
+            new TerminalEntry { platform = "Linux", command = "gnome-terminal" },
+            new TerminalEntry { platform = "OSX", command = "iTerm" }
         };
+
+        public string GetTerminalForPlatform(string platform)
+        {
+            var match = terminals.Find(t => t.platform == platform);
+            return match != null ? match.command : "";
+        }
+
+        public void SetTerminalForPlatform(string platform, string command)
+        {
+            var existing = terminals.Find(t => t.platform == platform);
+            if (existing != null)
+                existing.command = command;
+            else
+                terminals.Add(new TerminalEntry { platform = platform, command = command });
+        }
+
+        public string GetResolvedTerminalForPlatform(string platform)
+        {
+            var match = terminals.Find(t => t.platform == platform);
+            if (match != null && !string.IsNullOrEmpty(match.command))
+                return match.command;
+
+            // fallback seguro para cada plataforma
+            return platform switch
+            {
+                "Windows" => "cmd",
+                "Linux"   => "x-terminal-emulator", // Debian/Ubuntu compatível
+                "OSX"     => "open -a Terminal",    // abre o Terminal.app
+                _         => "cmd" // fallback geral
+            };
+        }
+
+        public void MergeMissingDefaults(Config defaults)
+        {
+            if (terminals == null || terminals.Count == 0)
+            {
+                terminals = defaults.terminals;
+                return;
+            }
+
+            foreach (var defaultEntry in defaults.terminals)
+            {
+                var existing = terminals.Find(t => t.platform == defaultEntry.platform);
+                if (existing == null)
+                    terminals.Add(defaultEntry);
+            }
+        }
     }
 
     public static class ConfigManager
@@ -39,23 +94,27 @@ namespace NvimUnity
         public static Config LoadConfig()
         {
             string path = GetConfigPath();
+            var defaultConfig = new Config();
 
             if (!File.Exists(path))
             {
-                var defaultConfig = new Config();
-                SaveConfig(defaultConfig); // salva o template inicial
+                SaveConfig(defaultConfig);
                 return defaultConfig;
             }
 
             try
             {
                 string json = File.ReadAllText(path);
-                return JsonUtility.FromJson<Config>(json);
+                var loaded = JsonUtility.FromJson<Config>(json) ?? new Config();
+
+                loaded.MergeMissingDefaults(defaultConfig);
+                SaveConfig(loaded); // atualiza com defaults se necessário
+                return loaded;
             }
             catch (Exception e)
             {
                 Debug.LogError($"[nvim-unity] Failed to load config: {e.Message}");
-                return new Config(); // fallback
+                return defaultConfig;
             }
         }
 

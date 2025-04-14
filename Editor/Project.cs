@@ -80,6 +80,7 @@ namespace NvimUnity
 
         public static void GenerateCompileIncludes()
         {
+            Debug.Log("Regenerating compile tags");
             var xml = XDocument.Load(csprojPath);
             var ns = xml.Root.Name.Namespace;
 
