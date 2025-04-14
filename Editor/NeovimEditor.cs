@@ -43,6 +43,9 @@ namespace NvimUnity
         public bool OpenProject(string path, int line, int column)
         {
             if (string.IsNullOrEmpty(path) || !IsNvimUnityDefaultEditor()) return false;
+
+            if(!Project.Exists())
+                SyncAll();
            
             bool IsRunnigInNeovim = SocketChecker.IsSocketActive(Socket);
 
