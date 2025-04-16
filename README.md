@@ -53,7 +53,7 @@ After installing, run with `nvimunity` or find it in your applications.
 
 ---
 
-> 🚀 Nice tip for the standalone: Hold **Shift** while launching to load the last opened project in Unity.
+* 🚀 Nice tip for the standalones: Hold **Shift** while launching to load the last opened project in Unity.
 
 ### Unity
 
