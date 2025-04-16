@@ -12,10 +12,40 @@ This Unity package integrates Neovim as an external script editor and provides a
 - 🔄 Regenerate `.csproj` files via a Unity button
 - 🔌 Unity package + Neovim plugin architecture
 - 🔥 Zero dependency on `nvr` (Neovim Remote)
-- 🖥️ Cross-platform support (Windows, Linux, macOS)
 
 
 ## 📂 Installation
+
+### 🖥️ Windows
+
+Download the latest installer:
+
+👉 [Download for Windows](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-setup.exe)
+
+### 🐧 Linux
+
+- **.AppImage (Portable)** - ✅ Test and feedback required!
+ 👉 [Download .AppImage](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-linux.AppImage)
+  ```bash
+  chmod +x NvimUnity.AppImage
+  ./NvimUnity.AppImage
+  ```
+
+After installing, run with `nvimunity` or find it in your applications.  
+
+### 🍎 macOS
+
+✅ Test and feedback required!
+
+👉 [Download for macOS](https://github.com/apyra/nvim-unity/releases/latest/download/NvimUnity.dmg).
+
+#### Installation Steps
+1. Open the downloaded `.dmg` file.
+2. Drag the `NvimUnity.app` into your `Applications` folder.
+3. Launch `NvimUnity` from your `Applications` folder.
+
+
+> 🚀 Nice tip for the standalone: Hold **Shift** while launching to load the last opened project in Unity.
 
 ### Unity
 
@@ -55,13 +85,6 @@ This plugin keeps your `.csproj` updated when creating/renaming/deleting `.cs` f
 ### Regenerate Project Files
 - From Unity: `Preferences > External Tools > Regenerate Project Files`
 - From Tools Menu: `Tools > Neovim Code Editor > Regenerate Project Files`
-
-### Custom Terminal
-
-*If you want to run nvim from a custom terminal you can set it here. In windows for example if you run nvim directly, it may not showup very well because the current user will not be bound to it.
-
-![Custom Terminal Preferences](Documentation/ExternalTools.png)
-
 
 ## 🧠 Recommended Configuration
 
@@ -227,7 +250,7 @@ return {
 
 When you create, delete, or move scripts in Unity, synchronization with the default code editor only happens after the compilation process. So if you open a script before it has been included in the .csproj, you won’t have LSP goodies like code completion.
 
-The best and fastest workflow, first open your project in unity it will automatically generates the .csproj for you. If you don't want to wait for compilation, create .cs files directly in Neovim (e.g., using nvim-tree or an LSP action like "move to its own file") with [nvim-unity-sync](https://github.com/apyra/nvim-unity-sync) installed. And if for some reason any script is not included in the project, run :Usync to sync all .cs files in the Assets folder. Once you have the .csproj already generated, you can edit your code without Unity if you wish.
+The fastest workflow: First open your project in unity it will automatically generates the .csproj for you. If you don't want to wait for compilation, create .cs files directly in Neovim (e.g., using nvim-tree or an LSP action like "move to its own file") with [nvim-unity-sync](https://github.com/apyra/nvim-unity-sync) installed. And if for some reason any script is not included in the project, run :Usync to sync all .cs files in the Assets folder. Once you have the .csproj already generated, you can edit your code without Unity if you wish.
 
 ## ⚡ Final Note
 

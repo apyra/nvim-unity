@@ -19,19 +19,17 @@ namespace NvimUnity
 
         private static Config config;
         private static bool needSaveConfig = false;
-        private static bool useCustomTerminal = false;
-        public static string Terminal = "";
 
         private static string EditorName = "Neovim Code Editor";
-        private static string Socket = @"\\.\pipe\nvim-unity2025";
+        private static string Socket = @"\\.\pipe\unity2025";
 
         static NeovimEditor()
         {
             CodeEditor.Register(new NeovimEditor());
             config = ConfigManager.LoadConfig();
-            Terminal = config.GetResolvedTerminalForPlatform(OS); 
-            useCustomTerminal = config.use_custom_terminal;
-        }
+            config.last_project = RootFolder;
+            ConfigManager.SaveConfig(config);
+        } 
 
         public string GetDisplayName() => EditorName;
 
@@ -53,34 +51,12 @@ namespace NvimUnity
 
             if(!IsRunnigInNeovim)
             {
-                string nvimArgs = $"--listen \"{Socket}\" \"+lcd {RootFolder}\" \"+{line}\" {path}";
-                string usingApp = defaultApp;
-                string fullArgs = nvimArgs;
-
-                if(useCustomTerminal)
-                {
-                    usingApp = defaultApp;
-                    string safeTerminal = Terminal.Replace(" ", "^ ");
-
-                    if(string.IsNullOrEmpty(safeTerminal))
-                    {
-                        Debug.LogError("[NvimUnity] You have to provide a valid terminal in Preferences>ExternalTools>TerminalSettings");
-                        return false;
-                    }
-
-                    fullArgs = $"\"{Terminal}\" {nvimArgs}";
-                }
-                else
-                {
-                    usingApp = Utils.GetNeovimPath();
-                }
-
                 try
                 {
                     var psi = new ProcessStartInfo
                     {
-                        FileName = usingApp,
-                        Arguments = fullArgs,
+                        FileName = defaultApp,
+                        Arguments = $"{path} {line}",
                         UseShellExecute = false,
                         CreateNoWindow = true,
                     };
@@ -142,38 +118,7 @@ namespace NvimUnity
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(10);
-            GUILayout.Label("Terminal Settings", EditorStyles.boldLabel);
-            GUILayout.Space(10);
-
-            var prevValue = useCustomTerminal;
-            var newValue = EditorGUILayout.Toggle(new GUIContent("Use a custom terminal", 
-                        "Let you choose a terminal to run neovim with"), prevValue);
-            
-            if (newValue != prevValue)
-            {
-                useCustomTerminal = newValue;
-                config.use_custom_terminal = useCustomTerminal;
-                needSaveConfig = true;
-            }
-
-            if(useCustomTerminal)
-            {
-                EditorGUILayout.BeginHorizontal();
-                Terminal = EditorGUILayout.TextField($"{OS} Terminal:", Terminal);
-                
-                if (GUILayout.Button("Save"))
-                {
-                    config.SetTerminalForPlatform(OS,Terminal);
-
-                    ConfigManager.SaveConfig(config);
-                    EditorUtility.DisplayDialog("Saved", $"Terminal for {OS} saved!", "OK");
-                }
-
-                EditorGUILayout.EndHorizontal();
-                GUILayout.Space(10);
-            }
-            
-        }
+         }
 
         public void Initialize(string editorInstallationPath)
         {

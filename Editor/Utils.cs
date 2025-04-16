@@ -54,22 +54,68 @@ namespace NvimUnity
         public static string GetNeovimPath()
         {
 #if UNITY_EDITOR_WIN
-                return @"C:\Program Files\Neovim\bin\nvim.exe"; // Windows
+            string path = @"C:\Program Files\Neovim\bin\nvim.exe";
+            if (File.Exists(path))
+                return path;
+            return "nvim";
 #else
-                return "/usr/bin/nvim"; // Linux/macOS
+            string[] possiblePaths = new[]
+            {
+                "/usr/bin/nvim",
+                "/usr/local/bin/nvim", // comum em Intel macOS e Linux
+                "/opt/homebrew/bin/nvim", // Apple Silicon (M1/M2)
+                "/snap/bin/nvim" // Linux com Snap
+            };
+
+            foreach (var p in possiblePaths)
+            {
+                if (File.Exists(p))
+                    return p;
+            }
+
+            return "nvim"; // fallback para PATH
 #endif
         }
+
 
         public static string GetLauncherPath()
         {
-            string scriptPath = NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Launcher/nvim-open"));
+            string launcherPath = Environment.GetEnvironmentVariable("NVIMUNITY_PATH");
+
+            if (string.IsNullOrEmpty(launcherPath))
+            {
+#if UNITY_EDITOR_WIN
+                // Fallbacks para Windows
+                string[] fallbackPaths = new[]
+                {
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "NvimUnity", "NvimUnity.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NvimUnity", "NvimUnity.exe")
+                };
+
+                return fallbackPaths.FirstOrDefault(File.Exists);
+#else
+                // Fallbacks para Linux/macOS
+                string[] fallbackPaths = new[]
+                {
+                    "/usr/bin/nvimunity",
+                    "/usr/local/bin/nvimunity",
+                    "/opt/nvimunity/nvimunity.sh",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/bin/nvimunity"),
+                    "/Applications/NvimUnity.app/Contents/MacOS/nvimunity"
+                };
+
+                return fallbackPaths.FirstOrDefault(File.Exists);
+#endif
+            }
 
 #if UNITY_EDITOR_WIN
-            return scriptPath + ".bat";
+            return Path.Combine(launcherPath, "NvimUnity.exe");
 #else
-            return scriptPath + ".sh";
+            return launcherPath;
 #endif
         }
+
+
 
         public static void EnsureLauncherExecutable()
         {
