@@ -26,8 +26,9 @@ Download the latest installer:
 
 ### 🐧 Linux
 
-- **AppImage (Portable)** - ✅ Test and feedback required!
  👉 [Download .AppImage](https://github.com/apyra/nvim-unity/releases/download/appimagev1.0.0/nvimunity-linux.AppImage)
+
+- **AppImage (Portable)** - ✅ Test and feedback required!
 
   ```bash
   chmod +x NvimUnity.AppImage
