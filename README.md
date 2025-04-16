@@ -20,12 +20,15 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 Download the latest installer:
 
-👉 [Download for Windows](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-setup.exe)
+👉 [Download for Windows](https://github.com/apyra/nvim-unity/releases/download/v1.0.0/nvimunity-setup.exe)
+
+---
 
 ### 🐧 Linux
 
-- **.AppImage (Portable)** - ✅ Test and feedback required!
- 👉 [Download .AppImage](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-linux.AppImage)
+- **AppImage (Portable)** - ✅ Test and feedback required!
+ 👉 [Download .AppImage](https://github.com/apyra/nvim-unity/releases/download/appimagev1.0.0/nvimunity-linux.AppImage)
+
   ```bash
   chmod +x NvimUnity.AppImage
   ./NvimUnity.AppImage
@@ -33,17 +36,21 @@ Download the latest installer:
 
 After installing, run with `nvimunity` or find it in your applications.  
 
+---
+
 ### 🍎 macOS
 
 ✅ Test and feedback required!
 
-👉 [Download for macOS](https://github.com/apyra/nvim-unity/releases/latest/download/NvimUnity.dmg).
+👉 [Download for macOS](https://github.com/apyra/nvim-unity/releases/download/osxv1.0.0/NvimUnity.dmg).
 
 #### Installation Steps
+
 1. Open the downloaded `.dmg` file.
 2. Drag the `NvimUnity.app` into your `Applications` folder.
 3. Launch `NvimUnity` from your `Applications` folder.
 
+---
 
 > 🚀 Nice tip for the standalone: Hold **Shift** while launching to load the last opened project in Unity.
 
