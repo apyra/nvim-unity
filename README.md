@@ -30,7 +30,7 @@ Download the latest installer:
 
  👉 [Download .AppImage](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-linux.AppImage)
 
-- **AppImage (Portable)** - 
+- **AppImage (Portable)**  
 
   ```bash
   mv NvimUnity.AppImage ~/.local/bin/nvimunity
