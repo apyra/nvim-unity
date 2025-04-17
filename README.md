@@ -20,8 +20,6 @@ This Unity package integrates Neovim as an external script editor and provides a
 
 Download the latest installer:
 
-https://github.com/apyra/nvim-unity/releases/download/v1.0.0/nvimunity-linux.AppImage
-
 👉 [Download for Windows](https://github.com/apyra/nvim-unity/releases/latest/download/nvimunity-setup.exe)
 
 ---
