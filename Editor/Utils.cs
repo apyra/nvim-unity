@@ -89,6 +89,7 @@ namespace NvimUnity
                 string[] fallbackPaths = new[]
                 {
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "NvimUnity", "NvimUnity.exe"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "NvimUnity", "NvimUnity.exe"),
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NvimUnity", "NvimUnity.exe")
                 };
 
@@ -100,6 +101,7 @@ namespace NvimUnity
                     "/usr/bin/nvimunity",
                     "/usr/local/bin/nvimunity",
                     "/opt/nvimunity/nvimunity.sh",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "NvimUnity.AppImage"),
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/bin/nvimunity"),
                     "/Applications/NvimUnity.app/Contents/MacOS/nvimunity"
                 };
