@@ -2,6 +2,14 @@
 
 # NvimUnity
 
+<p align="center">
+  <img alt="Neovim Plugin" src="https://img.shields.io/badge/Neovim-Plugin-57A143?logo=neovim&logoColor=white">
+  <a href="https://github.com/rockerBOO/awesome-neovim">
+    <img alt="Awesome" src="https://awesome.re/badge.svg">
+  </a>
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+</p>
+
 This Unity package integrates Neovim as an external script editor and provides a **Regenerate Project Files** button inside the Unity Editor.
 
 
