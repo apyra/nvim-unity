@@ -17,18 +17,18 @@ namespace NvimUnity
         private static string TemplatesPath => Utils.NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Editor/Templates"));
 
         private static string csprojPath;
-        private static HashSet<string> toCompile = new HashSet<string>(); 
- 
-        static Project ()
+        private static HashSet<string> toCompile = new HashSet<string>();
+
+        static Project()
         {
             csprojPath = Path.Combine(ProjectRoot, "Assembly-CSharp.csproj");
-            if(Exists())
-            GetCompileIncludes();
+            if (Exists())
+                GetCompileIncludes();
         }
 
         public static bool Exists()
         {
-           return File.Exists(csprojPath);
+            return File.Exists(csprojPath);
         }
 
 
@@ -72,10 +72,10 @@ namespace NvimUnity
             string referenceIncludes = GenerateReferenceIncludes();
 
             string finalContent = templateContent
-                .Replace("{{ANALYZERS}}",analyzersGroup)
-                .Replace("{{GENERATE_PROJECT_GROUP}}", generateProject) 
+                .Replace("{{ANALYZERS}}", analyzersGroup)
+                .Replace("{{GENERATE_PROJECT_GROUP}}", generateProject)
                 .Replace("{{REFERENCES}}", referenceIncludes)
-                .Replace("\r\n", "\n"); // força LF
+                .Replace("\r\n", "\n"); // Forces LF
 
             File.WriteAllText(csprojPath, finalContent, new UTF8Encoding(false));
 
@@ -89,7 +89,7 @@ namespace NvimUnity
 
         public static bool NeedRegenerateCompileIncludes(List<string> files)
         {
-            return files.Any(file => !toCompile.Contains(file));        
+            return files.Any(file => !toCompile.Contains(file));
         }
 
         public static void GetCompileIncludes()
@@ -97,7 +97,7 @@ namespace NvimUnity
             var xml = XDocument.Load(csprojPath);
             var ns = xml.Root.Name.Namespace;
 
-            toCompile.Clear(); // limpa o cache atual
+            toCompile.Clear(); // Clear current cache
 
             foreach (var compile in xml.Descendants(ns + "Compile"))
             {
@@ -119,7 +119,7 @@ namespace NvimUnity
             string rawXml = File.ReadAllText(csprojPath);
             bool hasPlaceholder = rawXml.Contains("<!-- {{COMPILE_INCLUDES}} -->");
 
-            // Gera os caminhos relativos de todos os arquivos .cs dentro de Assets/
+            // Generate relative paths of all .cs files inside Assets/
             var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
             var compileElements = files.Select(file =>
             {
@@ -137,17 +137,17 @@ namespace NvimUnity
 
                 if (itemGroup != null)
                 {
-                    // Remove todas as tags <Compile> existentes
+                    // Remove all existing <Compile> tags
                     itemGroup.Elements(ns + "Compile").Remove();
 
-                    // Adiciona as novas
+                    // Add new ones
                     foreach (var compile in compileElements)
                         itemGroup.Add(compile);
                 }
             }
             else
             {
-                // Cria novo ItemGroup com o comentário placeholder e as tags <Compile>
+                // Create new ItemGroup with the placeholder comment and <Compile> tags
                 itemGroup = new XElement(ns + "ItemGroup",
                     new XComment(" {{COMPILE_INCLUDES}} ")
                 );
@@ -155,7 +155,7 @@ namespace NvimUnity
                 foreach (var compile in compileElements)
                     itemGroup.Add(compile);
 
-                // Insere como o 10º filho direto de <Project>, ou no final se não tiver 10
+                // Insert as the 10th child of <Project>, or at the end if there are less than 10
                 var projectChildren = xml.Root.Elements().ToList();
                 if (projectChildren.Count >= 10)
                     projectChildren[9].AddBeforeSelf(itemGroup);
@@ -195,10 +195,10 @@ namespace NvimUnity
             string buildTarget = EditorUserBuildSettings.activeBuildTarget.ToString();
             int buildTargetId = (int)EditorUserBuildSettings.activeBuildTarget;
 
-            // Detectar se é um projeto de editor (presença de pasta Assets/Editor)
+            // Detect if it's an editor project (presence of Assets/Editor folder)
             string projectType = Directory.Exists("Assets/Editor") ? "Editor:2" : "Game:1";
 
-            // Obter a versão do gerador dinamicamente (use AssemblyInfo.cs para definir [assembly: AssemblyVersion("x.x.x")])
+            // Obtain the generator version dynamically (use AssemblyInfo.cs to set [assembly: AssemblyVersion("x.x.x")])
             string generatorVersion = System.Reflection.Assembly
                 .GetExecutingAssembly()
                 .GetName()
@@ -207,7 +207,7 @@ namespace NvimUnity
 
             if (string.IsNullOrEmpty(generatorVersion) || generatorVersion == "0.0.0.0")
             {
-                generatorVersion = "2.0.22"; // fallback
+                generatorVersion = "2.0.22"; // Fallback
             }
 
             sb.AppendLine("  <PropertyGroup>");
@@ -224,7 +224,6 @@ namespace NvimUnity
 
         private static string GenerateReferenceIncludes()
         {
-
             var sb = new StringBuilder();
 
             var assemblies = CompilationPipeline.GetAssemblies();
@@ -251,24 +250,24 @@ namespace NvimUnity
                 }
             }
 
-            // Adiciona manualmente os .dll de Library/ScriptAssemblies
+            // Add manually the .dll from Library/ScriptAssemblies
             string assembliesDir = Path.Combine(Directory.GetCurrentDirectory(), "Library", "ScriptAssemblies");
             if (Directory.Exists(assembliesDir))
             {
                 foreach (var dll in Directory.GetFiles(assembliesDir, "*.dll"))
                 {
                     string name = Path.GetFileNameWithoutExtension(dll);
-                    if (!added.Contains(name)) // Evita duplicar
+                    if (!added.Contains(name)) // Avoids duplicates
                     {
                         string normalizedPath = Utils.NormalizePath(dll);
 
-                        // Garante que HintPath comece com "Library\..."
+                        // Ensures HintPath starts with "Library\..."
                         string hintPath;
                         var index = normalizedPath.IndexOf("Library" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
                         if (index >= 0)
                             hintPath = normalizedPath.Substring(index);
                         else
-                            hintPath = normalizedPath; // fallback, caso algo estranho aconteça
+                            hintPath = normalizedPath; // Fallback in case of unexpected behavior
 
                         sb.AppendLine($@"    <Reference Include=""{name}"">");
                         sb.AppendLine($@"      <HintPath>{hintPath}</HintPath>");
@@ -280,7 +279,6 @@ namespace NvimUnity
 
             return sb.ToString().Replace("\r\n", "\n").TrimEnd('\n');
         }
-   
-    } 
+    }
 }
 

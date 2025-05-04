@@ -9,8 +9,7 @@ namespace NvimUnity
     public class Config
     {
         public string last_project = "";
-
-        public void MergeMissingDefaults(Config defaults) {}
+        public void MergeMissingDefaults(Config defaults) { }
     }
 
     public static class ConfigManager
@@ -49,12 +48,12 @@ namespace NvimUnity
                 var loaded = JsonUtility.FromJson<Config>(json) ?? new Config();
 
                 loaded.MergeMissingDefaults(defaultConfig);
-                SaveConfig(loaded); // atualiza com defaults se necessário
+                SaveConfig(loaded); // Updates with defaults if necessary
                 return loaded;
             }
             catch (Exception e)
             {
-                Debug.LogError($"[nvim-unity] Failed to load config: {e.Message}");
+                Debug.LogError($"[NvimUnity] Failed to load config: {e.Message}");
                 return defaultConfig;
             }
         }
@@ -68,7 +67,7 @@ namespace NvimUnity
             }
             catch (Exception e)
             {
-                Debug.LogError($"[nvim-unity] Failed to save config: {e.Message}");
+                Debug.LogError($"[NvimUnity] Failed to save config: {e.Message}");
             }
         }
     }

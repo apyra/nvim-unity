@@ -1,11 +1,11 @@
 using System;
 using System.IO;
+using System.Diagnostics;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
-using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
@@ -26,7 +26,7 @@ namespace NvimUnity
         {
             string editorExe = EditorApplication.applicationPath;
             string editorDir = Path.GetDirectoryName(editorExe);
-            string root = Path.GetDirectoryName(editorDir); // sobe da pasta Editor/
+            string root = Path.GetDirectoryName(editorDir); // Up in editor folder
             return root;
         }
 
@@ -62,9 +62,9 @@ namespace NvimUnity
             string[] possiblePaths = new[]
             {
                 "/usr/bin/nvim",
-                "/usr/local/bin/nvim", // comum em Intel macOS e Linux
+                "/usr/local/bin/nvim", // Usual in Intel macOS e Linux
                 "/opt/homebrew/bin/nvim", // Apple Silicon (M1/M2)
-                "/snap/bin/nvim" // Linux com Snap
+                "/snap/bin/nvim" // Linux Snap
             };
 
             foreach (var p in possiblePaths)
@@ -73,7 +73,7 @@ namespace NvimUnity
                     return p;
             }
 
-            return "nvim"; // fallback para PATH
+            return "nvim"; // PATH fallback
 #endif
         }
 
@@ -85,7 +85,7 @@ namespace NvimUnity
             if (string.IsNullOrEmpty(launcherPath))
             {
 #if UNITY_EDITOR_WIN
-                // Fallbacks para Windows
+                // Windows fallbacks
                 string[] fallbackPaths = new[]
                 {
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "NvimUnity", "NvimUnity.exe"),
@@ -95,7 +95,7 @@ namespace NvimUnity
 
                 return fallbackPaths.FirstOrDefault(File.Exists);
 #else
-                // Fallbacks para Linux/macOS
+                // Linux/macOS fallbacks
                 string[] fallbackPaths = new[]
                 {
                     "/usr/bin/nvimunity",
@@ -117,8 +117,6 @@ namespace NvimUnity
 #endif
         }
 
-
-
         public static void EnsureLauncherExecutable()
         {
 #if !UNITY_EDITOR_WIN
@@ -127,7 +125,7 @@ namespace NvimUnity
                 string path = GetLauncherPath();
                 if (File.Exists(path))
                 {
-                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                    Process.Start(new ProcessStartInfo
                     {
                         FileName = "/bin/chmod",
                         Arguments = $"+x \"{path}\"",
@@ -138,11 +136,84 @@ namespace NvimUnity
             }
             catch (Exception e)
             {
-                Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
+                UnityEngine.Debug.LogWarning("[NvimUnity] Failed to chmod launcher: " + e.Message);
             }
 #endif
         }
 
+        public static ProcessStartInfo BuildProcessStartInfo(string defaultApp, string path, int line)
+        {
+#if !UNITY_EDITOR_WIN
+            string preferredTerminal = NeovimPreferences.GetPreferredTerminal();
+
+            string fileName = "/usr/bin/env";
+            string args = "echo 'No terminal emulator found!'; sleep 1";
+
+            Dictionary<string, string> terminals = NeovimPreferences.GetAvailableTerminals();
+
+            if (terminals.TryGetValue(preferredTerminal, out var cmdFormat) &&
+                IsTerminalAvailable(preferredTerminal))
+            {
+                if (cmdFormat == "")
+                {
+                    fileName = preferredTerminal;
+                    args = $"-e {defaultApp} {path} {line}";
+                }
+                else
+                {
+                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                }
+            }
+
+            else
+            {
+                foreach (var t in terminals)
+                {
+                    if (IsTerminalAvailable(t.Key))
+                    {
+                        args = string.Format(t.Value, $"{defaultApp} {path} {line}");
+                    }
+                }
+            }
+
+            return new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = args,
+                UseShellExecute = true,
+                CreateNoWindow = false
+            };
+#endif
+        }
+
+        public static bool IsTerminalAvailable(string terminalName)
+        {
+#if !UNITY_EDITOR_WIN
+            UnityEngine.Debug.Log($"[NvimUnity] Checking if terminal is available: {terminalName}");
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "which",
+                    Arguments = terminalName,
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
+                using (var process = Process.Start(psi))
+                {
+                    process.WaitForExit(500);
+                    return process.ExitCode == 0;
+                }
+            }
+            catch
+            {
+                return false;
+            }
+#endif
+        }
     }
 }
 
