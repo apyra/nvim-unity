@@ -58,7 +58,6 @@ namespace NvimUnity
                 {
                     if (OS == "Windows")
                     {
-                        // Original behavior for other OSes
                         var psi = new ProcessStartInfo
                         {
                             FileName = defaultApp,
@@ -72,6 +71,7 @@ namespace NvimUnity
                     }
                     else
                     {
+                        // Original behavior for other OSes
                         ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
 
                         UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
