@@ -6,10 +6,9 @@ namespace NvimUnity
     {
         void OnApplicationQuit()
         {
-            if(NeovimEditor.IsNvimUnityDefaultEditor())
+            if (NeovimEditor.IsNvimUnityDefaultEditor())
                 NeovimEditor.Save();
         }
-
     }
 }
 

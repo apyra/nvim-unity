@@ -6,7 +6,6 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using Unity.CodeEditor;
-using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
@@ -21,7 +20,9 @@ namespace NvimUnity
         private static bool needSaveConfig = false;
 
         private static string EditorName = "Neovim Code Editor";
-        private static string Socket = @"\\.\pipe\unity2025";
+        private static string Socket =>
+            OS == "Windows" ? @"\\.\pipe\unity2025" :
+            $"{Environment.GetFolderPath(Environment.SpecialFolder.UserProfile)}/.cache/nvimunity.sock";
 
         static NeovimEditor()
         {
@@ -29,44 +30,58 @@ namespace NvimUnity
             config = ConfigManager.LoadConfig();
             config.last_project = RootFolder;
             ConfigManager.SaveConfig(config);
-        } 
+        }
 
         public string GetDisplayName() => EditorName;
 
         public static bool IsNvimUnityDefaultEditor()
         {
-            return  string.Equals(defaultApp,Utils.GetLauncherPath());
+            return string.Equals(defaultApp, Utils.GetLauncherPath());
         }
 
         public bool OpenProject(string path, int line, int column)
         {
             if (string.IsNullOrEmpty(path) || !IsNvimUnityDefaultEditor()) return false;
 
-            if(!Project.Exists())
+            if (!Project.Exists())
                 SyncAll();
-           
+
             bool IsRunnigInNeovim = SocketChecker.IsSocketActive(Socket);
 
-            if( line<=0 ) line = 1;
+            UnityEngine.Debug.Log($"[NvimUnity] IsRunnigInNeovim: {IsRunnigInNeovim}");
 
-            if(!IsRunnigInNeovim)
+            if (line <= 0) line = 1;
+
+            if (!IsRunnigInNeovim)
             {
                 try
                 {
-                    var psi = new ProcessStartInfo
+                    if (OS == "Windows")
                     {
-                        FileName = defaultApp,
-                        Arguments = $"{path} {line}",
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                    };
+                        // Original behavior for other OSes
+                        var psi = new ProcessStartInfo
+                        {
+                            FileName = defaultApp,
+                            Arguments = $"{path} {line}",
+                            UseShellExecute = true,
+                            CreateNoWindow = false,
+                        };
 
-                    Process.Start(psi);
+                        UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
+                        Process.Start(defaultApp, $"{path} {line}");
+                    }
+                    else
+                    {
+                        ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
+
+                        UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
+                        Process.Start(psi);
+                    }
                     return true;
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError($"[NvimUnity] Failed to start App: {ex.Message}");
+                    UnityEngine.Debug.LogError($"[NvimUnity] Failed to start App: {ex.Message}");
                     return false;
                 }
             }
@@ -80,7 +95,7 @@ namespace NvimUnity
         {
             try
             {
-                string cmd = $"<Esc>:e {filePath}<CR>{line}G";
+                string cmd = $"<CMD>e +{line} {filePath}<CR>";
                 string nvimArgs = $"--server {Socket} --remote-send \"{cmd}\"";
                 string nvimPath = Utils.GetNeovimPath();
 
@@ -92,18 +107,18 @@ namespace NvimUnity
                     CreateNoWindow = true,
                 };
 
-                Process.Start(psi);
+                Process.Start(nvimPath, nvimArgs);
                 return true;
             }
             catch (Exception ex)
             {
-                Debug.LogError($"[NvimUnity] Failed to start App: {ex.Message}");
+                UnityEngine.Debug.LogError($"[NvimUnity] Failed to start App: {ex.Message}");
                 return false;
             }
         }
 
         public void OnGUI()
-        {   
+        {
             GUILayout.Space(10);
 
             EditorGUILayout.BeginHorizontal();
@@ -118,7 +133,7 @@ namespace NvimUnity
             EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(10);
-         }
+        }
 
         public void Initialize(string editorInstallationPath)
         {
@@ -130,7 +145,8 @@ namespace NvimUnity
             new CodeEditor.Installation { Name = EditorName, Path = defaultApp }
         };
 
-        public void SyncAll() {
+        public void SyncAll()
+        {
             AssetDatabase.Refresh();
             Project.GenerateAll();
         }
@@ -143,7 +159,7 @@ namespace NvimUnity
                 return;
             }
 
-            if(Project.HasFilesBeenDeletedOrMoved())
+            if (Project.HasFilesBeenDeletedOrMoved())
             {
                 Project.GenerateCompileIncludes();
                 return;
@@ -158,7 +174,7 @@ namespace NvimUnity
 
             if (hasCsInAssets)
             {
-                if(Project.NeedRegenerateCompileIncludes(fileList.ToList()))
+                if (Project.NeedRegenerateCompileIncludes(fileList.ToList()))
                     Project.GenerateCompileIncludes();
             }
         }
@@ -172,9 +188,9 @@ namespace NvimUnity
 
         public void Save()
         {
-            if(needSaveConfig)
+            if (needSaveConfig)
             {
-                ConfigManager.SaveConfig(config);           
+                ConfigManager.SaveConfig(config);
                 needSaveConfig = false;
             }
         }
