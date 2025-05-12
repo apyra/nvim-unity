@@ -19,7 +19,6 @@ namespace NvimUnity
         {
             return CodeEditor.CurrentEditor is NeovimEditor;
         }
-
     }
 }
 

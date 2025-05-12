@@ -1,7 +1,7 @@
 using System;
 using System.Net.Sockets;
 using System.IO.Pipes;
-using UnityEngine; // Pra usar Debug.Log
+using UnityEngine; // To use Debug.Log
 
 namespace NvimUnity
 {
@@ -27,6 +27,7 @@ namespace NvimUnity
                 {
                     if (!System.IO.File.Exists(socketPath))
                     {
+						Debug.Log($"[NvimUnity] Socket file does not exist: {socketPath}");
                         return false;
                     }
 
@@ -36,7 +37,7 @@ namespace NvimUnity
                     return sock.Connected;
                 }
             }
-            catch            
+            catch
             {
                 return false;
             }
