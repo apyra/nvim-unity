@@ -61,13 +61,13 @@ namespace NvimUnity
                         var psi = new ProcessStartInfo
                         {
                             FileName = defaultApp,
-                            Arguments = $"{path} {line}",
+                            Arguments = $"{path} {line} {config.neovimLocation}",
                             UseShellExecute = true,
                             CreateNoWindow = false,
                         };
-
+						
                         UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
-                        Process.Start(defaultApp, $"{path} {line}");
+                        Process.Start(defaultApp, $"{path} {line} {config.neovimLocation}");
                     }
                     else
                     {
@@ -79,7 +79,7 @@ namespace NvimUnity
                         UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
                         Process.Start(psi);
 #endif
-					}
+		    }
                     return true;
                 }
                 catch (Exception ex)
@@ -100,7 +100,13 @@ namespace NvimUnity
             {
                 string cmd = $"<CMD>e +{line} {filePath}<CR>";
                 string nvimArgs = $"--server {Socket} --remote-send \"{cmd}\"";
-                string nvimPath = Utils.GetNeovimPath();
+                string nvimPath = 
+				
+#if UNITY_EDITOR_WIN
+				config.neovimLocation;
+#else
+				Utils.GetNeovimPath();
+#endif
 
                 var psi = new ProcessStartInfo
                 {
@@ -134,6 +140,16 @@ namespace NvimUnity
             }
 
             EditorGUILayout.EndHorizontal();
+	    
+            EditorGUILayout.BeginHorizontal();
+
+            GUILayout.Label("Neovim location", EditorStyles.boldLabel, GUILayout.Width(250));
+            config.neovimLocation = GUILayout.TextField(config.neovimLocation);
+			if(GUILayout.Button("Browse", GUILayout.Width(80))){
+				config.neovimLocation = EditorUtility.OpenFilePanel("Select neovim", "", "exe");
+				ConfigManager.SaveConfig(config);
+			}
+			EditorGUILayout.EndHorizontal();
 
             GUILayout.Space(10);
         }

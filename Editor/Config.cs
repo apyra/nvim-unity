@@ -9,6 +9,7 @@ namespace NvimUnity
     public class Config
     {
         public string last_project = "";
+		public string neovimLocation = "C:\\Program Files\\Neovim\\bin\\nvim.exe";
         public void MergeMissingDefaults(Config defaults) { }
     }
 
