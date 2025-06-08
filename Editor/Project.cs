@@ -94,7 +94,6 @@ namespace NvimUnity
                             UseShellExecute = false,
                             CreateNoWindow = true,
                     };
-UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
                     Process.Start(psi);
                 }
                 catch (Exception ex)
