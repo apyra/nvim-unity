@@ -60,6 +60,8 @@ namespace NvimUnity
                 {
                     if (OS == "Windows")
                     {
+						
+#if UNITY_EDITOR_WIN
                         var psi = new ProcessStartInfo
                         {
                             FileName = defaultApp,
@@ -71,6 +73,7 @@ namespace NvimUnity
                         if(debugging)
                         UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
                         Process.Start(defaultApp, $"{path} {line} {config.neovimLocation}");
+#endif
                     }
                     else
                     {
@@ -144,6 +147,8 @@ namespace NvimUnity
 
             EditorGUILayout.EndHorizontal();
 	    
+		
+#if UNITY_EDITOR_WIN
             EditorGUILayout.BeginHorizontal();
 
             GUILayout.Label("Neovim location", EditorStyles.boldLabel, GUILayout.Width(250));
@@ -153,7 +158,7 @@ namespace NvimUnity
 				ConfigManager.SaveConfig(config);
 			}
 			EditorGUILayout.EndHorizontal();
-
+#endif
             GUILayout.Space(10);
         }
 
