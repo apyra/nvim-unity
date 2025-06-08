@@ -18,6 +18,7 @@ namespace NvimUnity
 
         private static Config config;
         private static bool needSaveConfig = false;
+        private static bool debugging = false;
 
         private static string EditorName = "Neovim Code Editor";
         private static string Socket =>
@@ -41,14 +42,15 @@ namespace NvimUnity
 
         public bool OpenProject(string path, int line, int column)
         {
-            if (string.IsNullOrEmpty(path) || !IsNvimUnityDefaultEditor()) return false;
+            if (string.IsNullOrEmpty(path) || 
+               !IsNvimUnityDefaultEditor() ||
+               !Project.SupportsFile(path)
+                    ) return false;
 
             if (!Project.Exists())
                 SyncAll();
 
             bool IsRunnigInNeovim = SocketChecker.IsSocketActive(Socket);
-
-            UnityEngine.Debug.Log($"[NvimUnity] IsRunnigInNeovim: {IsRunnigInNeovim}");
 
             if (line <= 0) line = 1;
 
@@ -65,7 +67,8 @@ namespace NvimUnity
                             UseShellExecute = true,
                             CreateNoWindow = false,
                         };
-						
+
+                        if(debugging)
                         UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
                         Process.Start(defaultApp, $"{path} {line} {config.neovimLocation}");
                     }
@@ -75,7 +78,7 @@ namespace NvimUnity
 #if !UNITY_EDITOR_WIN
 			// Original behavior for other OSes
                         ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
-
+                        if(debugging)
                         UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
                         Process.Start(psi);
 #endif

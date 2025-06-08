@@ -21,7 +21,20 @@ namespace NvimUnity
         private static string csprojPath;
         private static HashSet<string> toCompile = new HashSet<string>(); 
 
-        public static bool addProjectToSolution = false;
+        public static bool addProjectToSolution = true;
+
+        public static List<string> supportedFiles = 
+            new List<string> {
+                 ".cs",
+                 ".uxml",
+                 ".shader",
+                 ".compute",
+                 ".cginc",
+                 ".hlsl",
+                 ".glslinc",
+                 ".template",
+                 ".raytrace"
+            };
  
         static Project ()
         {
@@ -77,11 +90,10 @@ namespace NvimUnity
                     var psi = new ProcessStartInfo
                     {
                             FileName = "dotnet",
-                            Arguments = $"sln {slnOutputPath} add ${csprojPath}",
+                            Arguments = $"sln {slnOutputPath} add {csprojPath}",
                             UseShellExecute = false,
                             CreateNoWindow = true,
                     };
-
                     Process.Start(psi);
                 }
                 catch (Exception ex)
@@ -127,6 +139,11 @@ namespace NvimUnity
                 Debug.LogError($"[NvimUnity] Failed to generate the csproj file: {ex.Message}");
                 return false;
             }
+        }
+
+        public static bool SupportsFile(string path)
+        {
+            return supportedFiles.Contains(Path.GetExtension(path));
         }
 
         public static bool HasFilesBeenDeletedOrMoved()
