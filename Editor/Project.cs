@@ -2,12 +2,14 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using System.Diagnostics;
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Compilation;
+using Debug = UnityEngine.Debug;
 
 namespace NvimUnity
 {
@@ -17,52 +19,88 @@ namespace NvimUnity
         private static string TemplatesPath => Utils.NormalizePath(Path.GetFullPath("Packages/com.apyra.nvim-unity/Editor/Templates"));
 
         private static string csprojPath;
-        private static HashSet<string> toCompile = new HashSet<string>();
+        private static HashSet<string> toCompile = new HashSet<string>(); 
 
-        static Project()
+        public static bool addProjectToSolution = false;
+ 
+        static Project ()
         {
             csprojPath = Path.Combine(ProjectRoot, "Assembly-CSharp.csproj");
-            if (Exists())
-                GetCompileIncludes();
+            if(Exists())
+            GetCompileIncludes();
         }
 
         public static bool Exists()
         {
-            return File.Exists(csprojPath);
+           return File.Exists(csprojPath);
         }
-
 
         public static void GenerateAll()
         {
-            GenerateSolution();
-            GenerateProject();
+            if(!GenerateProject())
+                return;
+
+            if(GenerateSolution())
+                Debug.Log($"[NvimUnity] Succesfully generated csproj and sln files");
         }
 
-        public static void GenerateSolution()
+         public static bool GenerateSolution()
         {
             string slnTemplatePath = Path.Combine(TemplatesPath, "template.sln");
             string slnOutputPath = Path.Combine(ProjectRoot, $"{Path.GetFileName(ProjectRoot)}.sln");
 
+            bool generated = false;
+
             if (!File.Exists(slnTemplatePath))
             {
                 Debug.LogError("[NvimUnity] Missing template.sln");
-                return;
+                return false;
             }
 
-            string slnContent = File.ReadAllText(slnTemplatePath);
-            slnContent = slnContent.Replace("{{ProjectName}}", "Assembly-CSharp");
+            try
+            {
+                string slnContent = File.ReadAllText(slnTemplatePath);
+                slnContent = slnContent.Replace("{{ProjectName}}", "Assembly-CSharp");
+                File.WriteAllText(slnOutputPath, slnContent);
+                generated = true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NvimUnity] Failed create the sln file: {ex.Message}");
+                return false;
+            }
 
-            File.WriteAllText(slnOutputPath, slnContent);
+            if(addProjectToSolution)
+            {
+                try
+                {
+                    var psi = new ProcessStartInfo
+                    {
+                            FileName = "dotnet",
+                            Arguments = $"sln {slnOutputPath} add ${csprojPath}",
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                    };
+
+                    Process.Start(psi);
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError($"[NvimUnity] Failed to add the project to the sln file: {ex.Message}");
+                }
+            }
+
+            return generated;
         }
 
-        public static void GenerateProject()
+        public static bool GenerateProject()
         {
             string templateFullPath = Path.Combine(TemplatesPath, "template.csproj");
 
             if (!File.Exists(templateFullPath))
             {
                 Debug.LogError($"[NvimUnity] Template not found at {templateFullPath}");
-                return;
+                return false;
             }
 
             string templateContent = File.ReadAllText(templateFullPath);
@@ -72,14 +110,23 @@ namespace NvimUnity
             string referenceIncludes = GenerateReferenceIncludes();
 
             string finalContent = templateContent
-                .Replace("{{ANALYZERS}}", analyzersGroup)
-                .Replace("{{GENERATE_PROJECT_GROUP}}", generateProject)
+                .Replace("{{ANALYZERS}}",analyzersGroup)
+                .Replace("{{GENERATE_PROJECT_GROUP}}", generateProject) 
                 .Replace("{{REFERENCES}}", referenceIncludes)
-                .Replace("\r\n", "\n"); // Forces LF
+                .Replace("\r\n", "\n"); // força LF
 
-            File.WriteAllText(csprojPath, finalContent, new UTF8Encoding(false));
-
-            GenerateCompileIncludes();
+            
+            try
+            {
+                File.WriteAllText(csprojPath, finalContent, new UTF8Encoding(false));
+                GenerateCompileIncludes();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"[NvimUnity] Failed to generate the csproj file: {ex.Message}");
+                return false;
+            }
         }
 
         public static bool HasFilesBeenDeletedOrMoved()
@@ -89,7 +136,7 @@ namespace NvimUnity
 
         public static bool NeedRegenerateCompileIncludes(List<string> files)
         {
-            return files.Any(file => !toCompile.Contains(file));
+            return files.Any(file => !toCompile.Contains(file));        
         }
 
         public static void GetCompileIncludes()
@@ -97,7 +144,7 @@ namespace NvimUnity
             var xml = XDocument.Load(csprojPath);
             var ns = xml.Root.Name.Namespace;
 
-            toCompile.Clear(); // Clear current cache
+            toCompile.Clear(); // limpa o cache atual
 
             foreach (var compile in xml.Descendants(ns + "Compile"))
             {
@@ -119,7 +166,7 @@ namespace NvimUnity
             string rawXml = File.ReadAllText(csprojPath);
             bool hasPlaceholder = rawXml.Contains("<!-- {{COMPILE_INCLUDES}} -->");
 
-            // Generate relative paths of all .cs files inside Assets/
+            // Gera os caminhos relativos de todos os arquivos .cs dentro de Assets/
             var files = Directory.GetFiles(Application.dataPath, "*.cs", SearchOption.AllDirectories);
             var compileElements = files.Select(file =>
             {
@@ -137,17 +184,17 @@ namespace NvimUnity
 
                 if (itemGroup != null)
                 {
-                    // Remove all existing <Compile> tags
+                    // Remove todas as tags <Compile> existentes
                     itemGroup.Elements(ns + "Compile").Remove();
 
-                    // Add new ones
+                    // Adiciona as novas
                     foreach (var compile in compileElements)
                         itemGroup.Add(compile);
                 }
             }
             else
             {
-                // Create new ItemGroup with the placeholder comment and <Compile> tags
+                // Cria novo ItemGroup com o comentário placeholder e as tags <Compile>
                 itemGroup = new XElement(ns + "ItemGroup",
                     new XComment(" {{COMPILE_INCLUDES}} ")
                 );
@@ -155,7 +202,7 @@ namespace NvimUnity
                 foreach (var compile in compileElements)
                     itemGroup.Add(compile);
 
-                // Insert as the 10th child of <Project>, or at the end if there are less than 10
+                // Insere como o 10º filho direto de <Project>, ou no final se não tiver 10
                 var projectChildren = xml.Root.Elements().ToList();
                 if (projectChildren.Count >= 10)
                     projectChildren[9].AddBeforeSelf(itemGroup);
@@ -195,10 +242,10 @@ namespace NvimUnity
             string buildTarget = EditorUserBuildSettings.activeBuildTarget.ToString();
             int buildTargetId = (int)EditorUserBuildSettings.activeBuildTarget;
 
-            // Detect if it's an editor project (presence of Assets/Editor folder)
+            // Detectar se é um projeto de editor (presença de pasta Assets/Editor)
             string projectType = Directory.Exists("Assets/Editor") ? "Editor:2" : "Game:1";
 
-            // Obtain the generator version dynamically (use AssemblyInfo.cs to set [assembly: AssemblyVersion("x.x.x")])
+            // Obter a versão do gerador dinamicamente (use AssemblyInfo.cs para definir [assembly: AssemblyVersion("x.x.x")])
             string generatorVersion = System.Reflection.Assembly
                 .GetExecutingAssembly()
                 .GetName()
@@ -207,7 +254,7 @@ namespace NvimUnity
 
             if (string.IsNullOrEmpty(generatorVersion) || generatorVersion == "0.0.0.0")
             {
-                generatorVersion = "2.0.22"; // Fallback
+                generatorVersion = "2.0.22"; // fallback
             }
 
             sb.AppendLine("  <PropertyGroup>");
@@ -224,6 +271,7 @@ namespace NvimUnity
 
         private static string GenerateReferenceIncludes()
         {
+
             var sb = new StringBuilder();
 
             var assemblies = CompilationPipeline.GetAssemblies();
@@ -250,24 +298,24 @@ namespace NvimUnity
                 }
             }
 
-            // Add manually the .dll from Library/ScriptAssemblies
+            // Adiciona manualmente os .dll de Library/ScriptAssemblies
             string assembliesDir = Path.Combine(Directory.GetCurrentDirectory(), "Library", "ScriptAssemblies");
             if (Directory.Exists(assembliesDir))
             {
                 foreach (var dll in Directory.GetFiles(assembliesDir, "*.dll"))
                 {
                     string name = Path.GetFileNameWithoutExtension(dll);
-                    if (!added.Contains(name)) // Avoids duplicates
+                    if (!added.Contains(name)) // Evita duplicar
                     {
                         string normalizedPath = Utils.NormalizePath(dll);
 
-                        // Ensures HintPath starts with "Library\..."
+                        // Garante que HintPath comece com "Library\..."
                         string hintPath;
                         var index = normalizedPath.IndexOf("Library" + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
                         if (index >= 0)
                             hintPath = normalizedPath.Substring(index);
                         else
-                            hintPath = normalizedPath; // Fallback in case of unexpected behavior
+                            hintPath = normalizedPath; // fallback, caso algo estranho aconteça
 
                         sb.AppendLine($@"    <Reference Include=""{name}"">");
                         sb.AppendLine($@"      <HintPath>{hintPath}</HintPath>");
@@ -279,6 +327,7 @@ namespace NvimUnity
 
             return sb.ToString().Replace("\r\n", "\n").TrimEnd('\n');
         }
-    }
+   
+    } 
 }
 

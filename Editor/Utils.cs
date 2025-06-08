@@ -184,6 +184,7 @@ namespace NvimUnity
                 CreateNoWindow = false
             };
 #endif
+            return null;
         }
 
         public static bool IsTerminalAvailable(string terminalName)
@@ -213,6 +214,7 @@ namespace NvimUnity
                 return false;
             }
 #endif
+            return true;
         }
     }
 }
