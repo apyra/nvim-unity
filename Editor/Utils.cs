@@ -140,10 +140,10 @@ namespace NvimUnity
             }
 #endif
         }
+#if !UNITY_EDITOR_WIN
 
         public static ProcessStartInfo BuildProcessStartInfo(string defaultApp, string path, int line)
         {
-#if !UNITY_EDITOR_WIN
             string preferredTerminal = NeovimPreferences.GetPreferredTerminal();
 
             string fileName = "/usr/bin/env";
@@ -183,13 +183,12 @@ namespace NvimUnity
                 UseShellExecute = true,
                 CreateNoWindow = false
             };
-#endif
-            return null;
         }
+#endif
+#if !UNITY_EDITOR_WIN
 
         public static bool IsTerminalAvailable(string terminalName)
         {
-#if !UNITY_EDITOR_WIN
             UnityEngine.Debug.Log($"[NvimUnity] Checking if terminal is available: {terminalName}");
             try
             {
@@ -213,9 +212,9 @@ namespace NvimUnity
             {
                 return false;
             }
-#endif
-            return true;
         }
+#endif
+
     }
 }
 

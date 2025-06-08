@@ -71,12 +71,15 @@ namespace NvimUnity
                     }
                     else
                     {
-                        // Original behavior for other OSes
+			
+#if !UNITY_EDITOR_WIN
+			// Original behavior for other OSes
                         ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
 
                         UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
                         Process.Start(psi);
-                    }
+#endif
+					}
                     return true;
                 }
                 catch (Exception ex)
@@ -186,7 +189,7 @@ namespace NvimUnity
             return true;
         }
 
-        public void Save()
+        public static void Save()
         {
             if (needSaveConfig)
             {
