@@ -281,4 +281,4 @@ PRs, issues, ideas welcome! This project is evolving – help shape it 🚀
 
 ## 📄 License
 
-This project is licensed under the [MIT License](./LICENSE).
+MIT License).
