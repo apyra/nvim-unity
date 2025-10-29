@@ -184,6 +184,13 @@ namespace NvimUnity
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
+            installation = default;
+
+            if (!editorPath.Contains("nvimunity"))
+            {
+                return false;
+            }
+
             Utils.EnsureLauncherExecutable();
             installation = new CodeEditor.Installation { Name = EditorName, Path = Utils.GetLauncherPath() };
             return true;
