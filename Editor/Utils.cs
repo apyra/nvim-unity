@@ -77,7 +77,6 @@ namespace NvimUnity
 #endif
         }
 
-
         public static string GetLauncherPath()
         {
             string launcherPath = Environment.GetEnvironmentVariable("NVIMUNITY_PATH");
@@ -153,6 +152,33 @@ namespace NvimUnity
 
             if (terminals.TryGetValue(preferredTerminal, out var cmdFormat) &&
                 IsTerminalAvailable(preferredTerminal))
+#if UNITY_EDITOR_LINUX
+            {
+                fileName = preferredTerminal;
+
+                if (cmdFormat == "")
+                {
+                    args = $"{defaultApp} {path} {line}";
+                }
+                else
+                {
+                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                }
+            }
+
+            else
+            {
+                foreach (var t in terminals)
+                {
+                    if (IsTerminalAvailable(t.Key))
+                    {
+                        fileName = t.Key;
+                        args = $"{defaultApp} {path} {line}";
+                        break;
+                    }
+                }
+            }
+#else
             {
                 if (cmdFormat == "")
                 {
@@ -175,6 +201,7 @@ namespace NvimUnity
                     }
                 }
             }
+#endif
 
             return new ProcessStartInfo
             {
@@ -183,8 +210,9 @@ namespace NvimUnity
                 UseShellExecute = true,
                 CreateNoWindow = false
             };
-#endif
+#else
             return null;
+#endif
         }
 
         public static bool IsTerminalAvailable(string terminalName)
@@ -213,8 +241,9 @@ namespace NvimUnity
             {
                 return false;
             }
-#endif
+#else
             return true;
+#endif
         }
     }
 }
