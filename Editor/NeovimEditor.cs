@@ -69,26 +69,32 @@ namespace NvimUnity
                 {
                     if (OS == "Windows")
                     {
+						
+#if UNITY_EDITOR_WIN
                         var psi = new ProcessStartInfo
                         {
                             FileName = defaultApp,
-                            Arguments = $"{path} {line}",
+                            Arguments = $"{path} {line} {config.neovimLocation}",
                             UseShellExecute = true,
                             CreateNoWindow = false,
                         };
 
                         if(debugging)
                         UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
-                        Process.Start(defaultApp, $"{path} {line}");
+                        Process.Start(defaultApp, $"{path} {line} {config.neovimLocation}");
+#endif
                     }
                     else
                     {
-                        // Original behavior for other OSes
+			
+#if !UNITY_EDITOR_WIN
+			// Original behavior for other OSes
                         ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
                         if(debugging)
                         UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
                         Process.Start(psi);
-                    }
+#endif
+		    }
                     return true;
                 }
                 catch (Exception ex)
@@ -109,7 +115,13 @@ namespace NvimUnity
             {
                 string cmd = $"<CMD>e +{line} {filePath}<CR>";
                 string nvimArgs = $"--server {Socket} --remote-send \"{cmd}\"";
-                string nvimPath = Utils.GetNeovimPath();
+                string nvimPath = 
+				
+#if UNITY_EDITOR_WIN
+				config.neovimLocation;
+#else
+				Utils.GetNeovimPath();
+#endif
 
                 var psi = new ProcessStartInfo
                 {
@@ -143,7 +155,19 @@ namespace NvimUnity
             }
 
             EditorGUILayout.EndHorizontal();
+	    
+		
+#if UNITY_EDITOR_WIN
+            EditorGUILayout.BeginHorizontal();
 
+            GUILayout.Label("Neovim location", EditorStyles.boldLabel, GUILayout.Width(250));
+            config.neovimLocation = GUILayout.TextField(config.neovimLocation);
+			if(GUILayout.Button("Browse", GUILayout.Width(80))){
+				config.neovimLocation = EditorUtility.OpenFilePanel("Select neovim", "", "exe");
+				ConfigManager.SaveConfig(config);
+			}
+			EditorGUILayout.EndHorizontal();
+#endif
             GUILayout.Space(10);
         }
 
@@ -205,7 +229,7 @@ namespace NvimUnity
             return true;
         }
 
-        public void Save()
+        public static void Save()
         {
             if (needSaveConfig)
             {
