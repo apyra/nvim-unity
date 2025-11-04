@@ -41,7 +41,7 @@ Download the latest installer:
 - **AppImage (Portable)**  
 
   ```bash
-  mv NvimUnity.AppImage ~/.local/bin/nvimunity
+  mv nvimunity-linux.AppImage ~/.local/bin/nvimunity
   chmod +x ~/.local/bin/nvimunity
 
   ```
