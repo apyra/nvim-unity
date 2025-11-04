@@ -204,7 +204,7 @@ use {
 
 ## 🧩 Unity Snippets
 
-Use [LuaSnip](https://github.com/L3MON4D3/LuaSnip) to insert Unity C# boilerplate.
+Use [LuaSnip](https://github.com/L3MON4D3/LuaSnip) to insert Unity C# boilerplate. Here is a complete cs.lua to work with Unity -> [cs.lua](https://github.com/Saladin1812/dotfiles/blob/main/.config/nvim/lua/snippets/cs.lua)
 
 ### ✍️ Snippet Setup
 
