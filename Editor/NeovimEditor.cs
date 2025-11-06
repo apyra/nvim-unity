@@ -195,7 +195,7 @@ namespace NvimUnity
         {
             installation = default;
 
-            if (!editorPath.Contains("nvimunity"))
+            if (!editorPath.ToLower().Contains("nvimunity"))
             {
                 return false;
             }
@@ -203,6 +203,12 @@ namespace NvimUnity
             Utils.EnsureLauncherExecutable();
             installation = new CodeEditor.Installation { Name = EditorName, Path = Utils.GetLauncherPath() };
             return true;
+        }
+
+        [InitializeOnLoadMethod]
+        private static void Initialize()
+        {
+            CodeEditor.Editor.SetCodeEditor(Utils.GetLauncherPath());
         }
 
         public void Save()
