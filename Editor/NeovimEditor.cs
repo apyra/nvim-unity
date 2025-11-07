@@ -42,19 +42,10 @@ namespace NvimUnity
 
         public bool OpenProject(string path, int line, int column)
         {
-            if (string.IsNullOrEmpty(path))
-            {
-                path = RootFolder;
-            }
-            else if (!Project.SupportsFile(path))
-            {
-                return false;
-            }
-
-            if (!IsNvimUnityDefaultEditor())
-            {
-                return false;
-            }
+            if (string.IsNullOrEmpty(path) || 
+               !IsNvimUnityDefaultEditor() ||
+               !Project.SupportsFile(path)
+                    ) return false;
 
             if (!Project.Exists())
                 SyncAll();
@@ -193,13 +184,6 @@ namespace NvimUnity
 
         public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
         {
-            installation = default;
-
-            if (!editorPath.Contains("nvimunity"))
-            {
-                return false;
-            }
-
             Utils.EnsureLauncherExecutable();
             installation = new CodeEditor.Installation { Name = EditorName, Path = Utils.GetLauncherPath() };
             return true;
