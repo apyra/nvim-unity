@@ -142,10 +142,14 @@ namespace NvimUnity
         {
             // Not used by NvimUnity, but required by interface
         }
-
+        
         public CodeEditor.Installation[] Installations => new[]
         {
-            new CodeEditor.Installation { Name = EditorName, Path = defaultApp }
+            new CodeEditor.Installation
+            {
+                Name = EditorName,
+                Path = Utils.GetLauncherPath()
+            }
         };
 
         public void SyncAll()
@@ -182,12 +186,22 @@ namespace NvimUnity
             }
         }
 
-        public bool TryGetInstallationForPath(string editorPath, out CodeEditor.Installation installation)
+        public bool TryGetInstallationForPath(string path, out CodeEditor.Installation installation)
         {
-            Utils.EnsureLauncherExecutable();
-            installation = new CodeEditor.Installation { Name = EditorName, Path = Utils.GetLauncherPath() };
-            return true;
+            if (path == Utils.GetLauncherPath())
+            {
+                installation = new CodeEditor.Installation
+                {
+                    Name = EditorName,
+                    Path = Utils.GetLauncherPath()
+                };
+                return true;
+            }
+
+            installation = default;
+            return false;
         }
+
 
         public void Save()
         {
