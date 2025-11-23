@@ -48,6 +48,11 @@ Download the latest installer:
 
 After installing, run with `nvimunity` or find it in your applications.  
 
+- **Just using a script**
+
+  Since the AppImage doesn't seem to work for many people,
+  simply make a file called 'nvimunity.sh' in your $PATH and paste (this)[https://github.com/apyra/nvim-unity-standalone/blob/master/nvim-unity-linux/appimage/usr/bin/nvimunity.sh] into it, then, chmod +x it and launch it.
+  
 ---
 
 ### 🍎 macOS ###
@@ -77,6 +82,7 @@ https://github.com/apyra/nvim-unity.git
 
 - Go to `Edit > Preferences > External Tools`
 - Select **Neovim Code Editor** (no need to browse for `.exe`)
+- Beware, you have to install the unity package **For every project you want to use it with**
 
 
 ### Neovim (Lua)
