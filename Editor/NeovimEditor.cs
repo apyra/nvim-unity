@@ -42,10 +42,19 @@ namespace NvimUnity
 
         public bool OpenProject(string path, int line, int column)
         {
-            if (string.IsNullOrEmpty(path) || 
-               !IsNvimUnityDefaultEditor() ||
-               !Project.SupportsFile(path)
-                    ) return false;
+            if (string.IsNullOrEmpty(path))
+            {
+                path = RootFolder;
+            }
+            else if (!Project.SupportsFile(path))
+            {
+                return false;
+            }
+
+            if (!IsNvimUnityDefaultEditor())
+            {
+                return false;
+            }
 
             if (!Project.Exists())
                 SyncAll();
