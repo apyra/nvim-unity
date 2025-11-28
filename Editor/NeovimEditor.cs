@@ -78,7 +78,7 @@ namespace NvimUnity
                         };
 
                         if(debugging)
-                        UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
+                        UnityEngine.Debug.Log($"[NvimUnity] Executing on Windows: {psi.FileName} {psi.Arguments}");
                         Process.Start(defaultApp, $"{path} {line}");
                     }
                     else
