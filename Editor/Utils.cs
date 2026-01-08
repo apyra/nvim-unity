@@ -158,11 +158,11 @@ namespace NvimUnity
 
                 if (cmdFormat == "")
                 {
-                    args = $"{defaultApp} {path} {line}";
+                    args = $"\"{defaultApp}\" \"{path}\" {line}";
                 }
                 else
                 {
-                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                    args = string.Format(cmdFormat, $"\"{defaultApp}\" \"{path}\" {line}");
                 }
             }
 
@@ -173,7 +173,7 @@ namespace NvimUnity
                     if (IsTerminalAvailable(t.Key))
                     {
                         fileName = t.Key;
-                        args = $"{defaultApp} {path} {line}";
+                        args = $"\"{defaultApp}\" \"{path}\" {line}";
                         break;
                     }
                 }
@@ -183,11 +183,11 @@ namespace NvimUnity
                 if (cmdFormat == "")
                 {
                     fileName = preferredTerminal;
-                    args = $"-e {defaultApp} {path} {line}";
+                    args = $"-e \"{defaultApp}\" \"{path}\" {line}";
                 }
                 else
                 {
-                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                    args = string.Format(cmdFormat, $"\"{defaultApp}\" \"{path}\" {line}");
                 }
             }
 
@@ -197,7 +197,7 @@ namespace NvimUnity
                 {
                     if (IsTerminalAvailable(t.Key))
                     {
-                        args = string.Format(t.Value, $"{defaultApp} {path} {line}");
+                        args = string.Format(t.Value, $"\"{defaultApp}\" \"{path}\" {line}");
                     }
                 }
             }
