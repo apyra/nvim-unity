@@ -102,7 +102,9 @@ namespace NvimUnity
                     "/opt/nvimunity/nvimunity.sh",
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads", "NvimUnity.AppImage"),
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/bin/nvimunity"),
-                    "/Applications/NvimUnity.app/Contents/MacOS/nvimunity"
+                    "/Applications/NvimUnity.app/Contents/MacOS/nvimunity",
+                    "/run/current-system/sw/bin/nvimunity",
+                    Path.Combine("/etc/profiles/per-user", Environment.UserName, "bin/nvimunity")
                 };
 
                 return fallbackPaths.FirstOrDefault(File.Exists);
