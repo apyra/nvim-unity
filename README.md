@@ -53,6 +53,50 @@ After installing, run with `nvimunity` or find it in your applications.
   Since the AppImage doesn't seem to work for many people,
   simply make a file called 'nvimunity.sh' in your $PATH and paste [this](https://github.com/apyra/nvim-unity-standalone/blob/master/nvim-unity-linux/appimage/usr/bin/nvimunity.sh) into it, then, chmod +x it and launch it.
   
+- **NixOS**
+  
+  NixOS users can package the provided [nvimunity.sh](https://github.com/apyra/nvim-unity-standalone/blob/master/nvim-unity-linux/appimage/usr/bin/nvimunity.sh) as a derivation using the sample provided here. When duplicating the file contents, make sure to remove the provied `#!/bin/bash` header.
+
+  <details>
+
+  <summary>Sample derivation</summary>
+
+  ``` nix
+  {
+    lib,
+    makeWrapper,
+    runCommand,
+    bash,
+    jq,
+  }:
+    let
+      # Make sure to place nvimunity in the same directory as this derivation, or adjust the following path
+      src = ./nvimunity.sh:
+      binName = "nvimunity";
+      deps = [
+        bash
+        jq
+      ];
+    in
+    runCommand "${binName}"
+      {
+        nativeBuildInputs = [ makeWrapper ];
+        meta = {
+          mainProgram = "${binName}";
+        };
+      }
+      ''
+        mkdir -p $out/bin
+        install -m +x ${src} $out/bin/${binName}
+        wrapProgram $out/bin/${binName} \
+          --prefix PATH : ${lib.makeBinPath deps}
+      ''
+  ```
+
+  To include the derivation make sure to add `(callPackage ./nvimunity.nix {})`to your system or user packages (assuming that is the correct filepath). 
+
+  </details>
+
 ---
 
 ### 🍎 macOS ###
