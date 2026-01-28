@@ -12,6 +12,7 @@ namespace NvimUnity
         {
             ["ghostty"] = "", // Binary
 #if UNITY_EDITOR_LINUX
+            ["konsole"] = "",
             ["xdg-terminal-exec"] = "",
             ["kitty"] = "",
 #else   
