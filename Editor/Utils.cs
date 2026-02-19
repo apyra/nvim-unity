@@ -157,14 +157,17 @@ namespace NvimUnity
 #if UNITY_EDITOR_LINUX
             {
                 fileName = preferredTerminal;
+                string argsUnformat = $"{defaultApp} {path} {line}";
+                if (fileName == "ghostty")
+                    argsUnformat = "-e " + argsUnformat;
 
                 if (cmdFormat == "")
                 {
-                    args = $"{defaultApp} {path} {line}";
+                    args = argsUnformat;
                 }
                 else
                 {
-                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                    args = string.Format(cmdFormat, argsUnformat);
                 }
             }
 
