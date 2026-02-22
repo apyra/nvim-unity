@@ -12,7 +12,7 @@ namespace NvimUnity
     [InitializeOnLoad]
     public class NeovimEditor : IExternalCodeEditor
     {
-        public static string defaultApp => EditorPrefs.GetString("kScriptsDefaultApp");
+        public static string DefaultApp => EditorPrefs.GetString("kScriptsDefaultApp");
         public static string OS = Utils.GetCurrentOS();
         public static string RootFolder = Utils.GetProjectRoot();
 
@@ -37,7 +37,7 @@ namespace NvimUnity
 
         public static bool IsNvimUnityDefaultEditor()
         {
-            return string.Equals(defaultApp, Utils.GetLauncherPath());
+            return string.Equals(DefaultApp, Utils.GetLauncherPath());
         }
 
         public bool OpenProject(string path, int line, int column)
@@ -71,22 +71,24 @@ namespace NvimUnity
                     {
                         var psi = new ProcessStartInfo
                         {
-                            FileName = defaultApp,
+                            FileName = DefaultApp,
                             Arguments = $"{path} {line}",
                             UseShellExecute = true,
                             CreateNoWindow = false,
                         };
 
                         if(debugging)
-                        UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
-                        Process.Start(defaultApp, $"{path} {line}");
+                            UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
+
+                        Process.Start(DefaultApp, $"{path} {line}");
                     }
                     else
                     {
                         // Original behavior for other OSes
-                        ProcessStartInfo psi = Utils.BuildProcessStartInfo(defaultApp, path, line);
-                        if(debugging)
-                        UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi.FileName} {psi.Arguments}");
+                        ProcessStartInfo psi = Utils.BuildProcessStartInfo(DefaultApp, path, line);
+                        if (debugging)
+                            UnityEngine.Debug.Log($"[NvimUnity] Executing in terminal: {psi?.FileName} {psi?.Arguments}");
+
                         Process.Start(psi);
                     }
                     return true;
@@ -94,6 +96,7 @@ namespace NvimUnity
                 catch (Exception ex)
                 {
                     UnityEngine.Debug.LogError($"[NvimUnity] Failed to start App: {ex.Message}");
+                    UnityEngine.Debug.LogError($"[NvimUnity] Trace: {ex.StackTrace}");
                     return false;
                 }
             }

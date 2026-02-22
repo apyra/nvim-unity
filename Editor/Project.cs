@@ -87,6 +87,9 @@ namespace NvimUnity
             {
                 try
                 {
+                    if (!Utils.ExistsOnPath("dotnet"))
+                        throw new FileNotFoundException("dotnet not found on path, and is required!");
+
                     var psi = new ProcessStartInfo
                     {
                             FileName = "dotnet",

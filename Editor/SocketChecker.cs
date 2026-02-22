@@ -27,7 +27,7 @@ namespace NvimUnity
                 {
                     if (!System.IO.File.Exists(socketPath))
                     {
-						Debug.Log($"[NvimUnity] Socket file does not exist: {socketPath}");
+			Debug.Log($"[NvimUnity] Socket file does not exist: {socketPath}");
                         return false;
                     }
 

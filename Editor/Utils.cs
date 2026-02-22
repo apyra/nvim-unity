@@ -64,7 +64,10 @@ namespace NvimUnity
                 "/usr/bin/nvim",
                 "/usr/local/bin/nvim", // Usual in Intel macOS e Linux
                 "/opt/homebrew/bin/nvim", // Apple Silicon (M1/M2)
-                "/snap/bin/nvim" // Linux Snap
+                "/snap/bin/nvim", // Linux Snap
+                "/run/current-system/sw/bin/nvimunity",
+                Path.Combine("/etc/profiles/per-user", Environment.UserName, "bin/nvimunity"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nix-profile/bin/nvimunity"),
             };
 
             foreach (var p in possiblePaths)
@@ -104,10 +107,13 @@ namespace NvimUnity
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local/bin/nvimunity"),
                     "/Applications/NvimUnity.app/Contents/MacOS/nvimunity",
                     "/run/current-system/sw/bin/nvimunity",
-                    Path.Combine("/etc/profiles/per-user", Environment.UserName, "bin/nvimunity")
+                    Path.Combine("/etc/profiles/per-user", Environment.UserName, "bin/nvimunity"),
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nix-profile/bin/nvimunity"),
                 };
 
-                return fallbackPaths.FirstOrDefault(File.Exists);
+                var path = fallbackPaths.FirstOrDefault(File.Exists);
+
+                return path;
 #endif
             }
 
@@ -144,66 +150,38 @@ namespace NvimUnity
 
         public static ProcessStartInfo BuildProcessStartInfo(string defaultApp, string path, int line)
         {
-#if !UNITY_EDITOR_WIN
+#if UNITY_EDITOR_WIN
+            return null;
+#else
             string preferredTerminal = NeovimPreferences.GetPreferredTerminal();
 
-            string fileName = "/usr/bin/env";
-            string args = "echo 'No terminal emulator found!'; sleep 1";
+            string fileName = null;
+            string args = null;
 
             Dictionary<string, string> terminals = NeovimPreferences.GetAvailableTerminals();
 
-            if (terminals.TryGetValue(preferredTerminal, out var cmdFormat) &&
-                IsTerminalAvailable(preferredTerminal))
-#if UNITY_EDITOR_LINUX
+            if (terminals.TryGetValue(preferredTerminal, out var cmdPrefix) && ExistsOnPath(preferredTerminal))
             {
                 fileName = preferredTerminal;
-
-                if (cmdFormat == "")
-                {
-                    args = $"{defaultApp} {path} {line}";
-                }
-                else
-                {
-                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
-                }
-            }
-
+                args = $"{cmdPrefix} {defaultApp} \"{path}\" +{line}";
+            } 
             else
             {
-                foreach (var t in terminals)
+                foreach (var term in terminals)
                 {
-                    if (IsTerminalAvailable(t.Key))
-                    {
-                        fileName = t.Key;
-                        args = $"{defaultApp} {path} {line}";
-                        break;
-                    }
-                }
-            }
-#else
-            {
-                if (cmdFormat == "")
-                {
-                    fileName = preferredTerminal;
-                    args = $"-e {defaultApp} {path} {line}";
-                }
-                else
-                {
-                    args = string.Format(cmdFormat, $"{defaultApp} {path} {line}");
+                    if (!ExistsOnPath(term.Key))
+                        continue;
+
+                    fileName = term.Key;
+                    args = $"{term.Value} {defaultApp} \"{path}\" +{line}";
+                    break;
                 }
             }
 
-            else
-            {
-                foreach (var t in terminals)
-                {
-                    if (IsTerminalAvailable(t.Key))
-                    {
-                        args = string.Format(t.Value, $"{defaultApp} {path} {line}");
-                    }
-                }
+            if (fileName == null || args == null) {
+                UnityEngine.Debug.LogError("[NvimUnity] failed to find terminal");
+                return null;
             }
-#endif
 
             return new ProcessStartInfo
             {
@@ -212,40 +190,27 @@ namespace NvimUnity
                 UseShellExecute = true,
                 CreateNoWindow = false
             };
-#else
-            return null;
 #endif
         }
 
-        public static bool IsTerminalAvailable(string terminalName)
+        public static bool ExistsOnPath(string fileName)
         {
-#if !UNITY_EDITOR_WIN
-            UnityEngine.Debug.Log($"[NvimUnity] Checking if terminal is available: {terminalName}");
-            try
-            {
-                var psi = new ProcessStartInfo
-                {
-                    FileName = "which",
-                    Arguments = terminalName,
-                    RedirectStandardOutput = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                };
+            return GetFullPath(fileName) != null;
+        }
 
-                UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
-                using (var process = Process.Start(psi))
-                {
-                    process.WaitForExit(500);
-                    return process.ExitCode == 0;
-                }
-            }
-            catch
+        public static string GetFullPath(string fileName)
+        {
+            if (File.Exists(fileName))
+                return Path.GetFullPath(fileName);
+
+            var values = Environment.GetEnvironmentVariable("PATH");
+            foreach (var path in values.Split(Path.PathSeparator))
             {
-                return false;
+                var fullPath = Path.Combine(path, fileName);
+                if (File.Exists(fullPath))
+                    return fullPath;
             }
-#else
-            return true;
-#endif
+            return null;
         }
     }
 }
