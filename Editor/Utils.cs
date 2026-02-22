@@ -164,7 +164,7 @@ namespace NvimUnity
             if (terminals.TryGetValue(preferredTerminal, out var cmdPrefix) && ExistsOnPath(preferredTerminal))
             {
                 fileName = preferredTerminal;
-                args = cmdPrefix + defaultApp + path + line;
+                args = $"{cmdPrefix} {defaultApp} \"{path}\" +{line}";
             } 
             else
             {
@@ -174,7 +174,7 @@ namespace NvimUnity
                         continue;
 
                     fileName = term.Key;
-                    args = $"{term.Value} {defaultApp} {path} {line}";
+                    args = $"{term.Value} {defaultApp} \"{path}\" +{line}";
                     break;
                 }
             }
