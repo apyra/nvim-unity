@@ -154,7 +154,6 @@ namespace NvimUnity
             return null;
 #else
             string preferredTerminal = NeovimPreferences.GetPreferredTerminal();
-            UnityEngine.Debug.Log($"[NvimUnity] preferredTerminal: {preferredTerminal}");
 
             string fileName = null;
             string args = null;
