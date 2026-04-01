@@ -40,6 +40,15 @@ namespace NvimUnity
             return string.Equals(DefaultApp, Utils.GetLauncherPath());
         }
 
+        public static void Save()
+        {
+            if (needSaveConfig)
+            {
+                ConfigManager.SaveConfig(config);
+                needSaveConfig = false;
+            }
+        }
+
         public bool OpenProject(string path, int line, int column)
         {
             if (string.IsNullOrEmpty(path))
@@ -77,7 +86,7 @@ namespace NvimUnity
                             CreateNoWindow = false,
                         };
 
-                        if(debugging)
+                        if (debugging)
                             UnityEngine.Debug.Log($"[NvimUnity] Executing: {psi.FileName} {psi.Arguments}");
 
                         Process.Start(DefaultApp, $"{path} {line}");
@@ -154,7 +163,7 @@ namespace NvimUnity
         {
             // Not used by NvimUnity, but required by interface
         }
-        
+
         public CodeEditor.Installation[] Installations => new[]
         {
             new CodeEditor.Installation
@@ -212,16 +221,6 @@ namespace NvimUnity
 
             installation = default;
             return false;
-        }
-
-
-        public void Save()
-        {
-            if (needSaveConfig)
-            {
-                ConfigManager.SaveConfig(config);
-                needSaveConfig = false;
-            }
         }
     }
 }
