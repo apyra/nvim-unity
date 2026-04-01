@@ -1,6 +1,6 @@
 {
   "name": "com.apyra.nvim-unity",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "displayName": "Neovim Code Editor",
   "description": "Integration between Unity and Neovim as an external editor.",
   "unity": "2021.3",
